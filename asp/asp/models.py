@@ -29,18 +29,20 @@ class User(models.Model):
 class Item(models.Model):
     name = models.CharField(max_length = 200)
     description = models.CharField(max_length = 200)
-    weight = models.PositiveIntegerField()
+    weight = models.PositiveIntegerField(default = 0)
+    quantity = models.PositiveIntegerField(default = 0)
 
     def __str__(self):
         return f"{self.name}"
 
 class Ordered_Item(models.Model):
-    item = models.OneToOneField(Item, on_delete = models.CASCADE)
+    item = models.CharField(max_length = 200)e
     quantity = models.PositiveIntegerField()
 
     def __str__(self):
         return f"{self.item}, {self.quantity}"
 
+# no need to generate ref_no for it cuz it has its unique pk already
 class Order(models.Model):
     QUEUED_FOR_PROCESSING = 'QFP'
     PROCESSING_BY_WAREHOUSE = 'PBW'
@@ -65,7 +67,6 @@ class Order(models.Model):
     requester = models.ForeignKey(User, on_delete = models.CASCADE)
     time = models.DateTimeField()
     priority = models.PositiveIntegerField(default = 1)
-    ref_no = models.PositiveIntegerField(unique = True)
     items = models.ManyToManyField(Ordered_Item)
 
     def __str__(self):

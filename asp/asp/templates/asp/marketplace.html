@@ -1,15 +1,30 @@
 {% extends "asp/header.html" %}
 {% block content %}
-<p>This is our marketplace.</p>
-<p>More content will be updated</p>
-<form>
+<h1>This is the marketplace</h1>
+<h4>You can view the available stocks, and place your order here</h4>
+
+<p class="text-danger">{{ err }}</p>
+<p class="text-warning">{{ warning }}</p>
+<p class="text-success">{{ success }}</p>
+
+
+
+<form action="/asp/placeOrder" method="get">
     <ul>
     {% for item in item_list %}
-         <li><input type="checkbox"><span>{{ item }}</span></li>
-
+         <li><label for={{item.name}}> {{ item }}  - </label><input id={{item.name}} type="number" name={{item.name}} value="0"></li>
     {% endfor %}
     </ul>
+    <input type="submit" value="Place Order">
 </form>
+
+<!-- <form action="/placeOrder" method="get">
+    {% csrf_token %}
+    {% for item in item_list %}
+        {{ form }}
+    {% endfor %}
+    <input type="submit" value="Place Order">
+</form> -->
 {% endblock %}
 
 
