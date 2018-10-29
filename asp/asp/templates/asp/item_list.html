@@ -1,0 +1,15 @@
+<h1>Item</h1>
+<ul>
+{% for item in item_list %}
+    <li>
+        {{ item.name }} <br>
+        {{ item.description }}
+    </li>
+{% empty %}
+    <li>No item yet</li>
+{% endfor %}
+</ul>
+
+<form action="/total_weight/" method="get">
+
+</form>

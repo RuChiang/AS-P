@@ -1,0 +1,26 @@
+<!-- all the interface can be extended from this header -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Market Place</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-light">
+      <span class="navbar-text">
+        Navbar text with an inline element
+      </span>
+    </nav>
+
+    <div>
+       {% block content %}
+       {% endblock %}
+    </div>
+</body>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+</html>

@@ -1,0 +1,20 @@
+{% extends "asp/header.html" %}
+{% block content %}
+<p>This is our marketplace.</p>
+<p>More content will be updated</p>
+<form>
+    <ul>
+    {% for item in item_list %}
+         <li><input type="checkbox"><span>{{ item }}</span></li>
+
+    {% endfor %}
+    </ul>
+</form>
+{% endblock %}
+
+
+<!-- from backend pass a weight_limit so that this webpage can directly compute
+if the weight of the selected orders has exceeded the limit and thus disable the checkboxes-->
+
+
+<!-- when the checkbox is clicked, a textfield should pop up so that user can enter the quantity they want -->
