@@ -23,9 +23,8 @@ class User(models.Model):
         default = CLINIC_MANAGER
     )
 
-
     def __str__(self):
-        return f"{self.name}: {self.role}"
+        return f"{self.username}: {self.role}"
 
 class Item(models.Model):
     name = models.CharField(max_length = 200)
@@ -36,11 +35,11 @@ class Item(models.Model):
         return f"{self.name}"
 
 class Ordered_Item(models.Model):
-    item = models.OneToOneField(Item)
+    item = models.OneToOneField(Item, on_delete = models.CASCADE)
     quantity = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"{self.name}, {self.quantity}"
+        return f"{self.item}, {self.quantity}"
 
 class Order(models.Model):
     QUEUED_FOR_PROCESSING = 'QFP'
@@ -65,8 +64,10 @@ class Order(models.Model):
 
     requester = models.ForeignKey(User, on_delete = models.CASCADE)
     time = models.DateTimeField()
+    priority = models.PositiveIntegerField(default = 1)
     ref_no = models.PositiveIntegerField(unique = True)
     items = models.ManyToManyField(Ordered_Item)
 
     def __str__(self):
         return f"{self.ref_no}, {self.status}"
+                
