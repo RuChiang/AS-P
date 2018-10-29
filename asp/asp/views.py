@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic.list import ListView
-from asp.models import Item, Order
+from asp.models import Item, Order, Ordered_Item, User
 from django.http import HttpResponse
 from django.utils import timezone
 
@@ -16,30 +16,46 @@ def marketPlace(request):
 def placeOrder(request):
     weight_limit = 23.8
     items = Item.objects.all()
-    orders = {}
+    orders_items = {}
     if request.method == 'GET':
         in_stock = True
         # extract the order details into the order dict
         for item in request.GET:
-            order[str(item)] = request.GET[item]
+            if item != 'priority':
+                orders_items[str(item)] = int(request.GET[item])
+            else:
+                if request.GET[item] == 'low':
+                    priority = 1
+                elif request.GET[item] == 'medium':
+                    priority = 2
+                elif request.GET[item] == 'high':
+                    priority = 3
+
+        for orders_item in orders_items:
             # check if the stock is enough
-            if int(orders[str(item)]) > int(Item.objects.get(name=str(item)).quantity):
-                msg = "no enough stock in " + str(item) + " please place your order again"
+            if orders_items[orders_item] > int(Item.objects.get(name=str(orders_item)).quantity):
+                msg = "no enough stock in " + str(orders_item) + " please place your order again"
                 return render(request, 'asp/marketplace.html', {'err':msg, 'item_list':items })
         # no order placed and click placeOrder
-        all_zero_order =  True if 0 not in orders.values() else False
-        if all_zero_order:
+        all_zero_order =  True if 0 not in orders_items.values() else False
+        if not all_zero_order:
             msg = "Please input values for those supplies which you would like to order"
             return render(request, 'asp/marketplace.html', {'warning':msg, 'item_list':items })
 
-        # create an order
+        # create an order, and subtract the quantity of the available supplies
         OrderedItem_models = []
-        for order, quant in orders:
-            OrderedItem_models.append(Ordered_Item(item = order, quantity = quant))
+        for orders_item in orders_items:
+            item_in_db = Item.objects.get(name=str(orders_item))
+            item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
+            item_in_db.save()
+            new_ordered_item = Ordered_Item(item = str(orders_item), quantity = orders_items[orders_item])
+            new_ordered_item.save()
+            OrderedItem_models.append(new_ordered_item)
+
         # think about how to relate to the requester
         # add a field for the priority
         # are there other ways to simplify this logic?
-        Order_model = Order(status='QFP', requester = , time=timezone.now(), priority)
+        Order_model = Order(status='QFP', requester = User.objects.all()[0] , time=timezone.now(), priority=priority)
         Order_model.save()
         for OrderedItem_model in OrderedItem_models:
             Order_model.items.add(OrderedItem_model)

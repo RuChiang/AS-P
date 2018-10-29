@@ -2,8 +2,11 @@
 <ul>
 {% for item in item_list %}
     <li>
-        {{ item.name }} <br>
+        {{ item.name }}
+        <br>
         {{ item.description }}
+        <br>
+        {{ item.quantity }}
     </li>
 {% empty %}
     <li>No item yet</li>

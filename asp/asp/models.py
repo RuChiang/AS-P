@@ -36,7 +36,7 @@ class Item(models.Model):
         return f"{self.name}"
 
 class Ordered_Item(models.Model):
-    item = models.CharField(max_length = 200)e
+    item = models.CharField(max_length = 200)
     quantity = models.PositiveIntegerField()
 
     def __str__(self):
@@ -66,8 +66,9 @@ class Order(models.Model):
 
     requester = models.ForeignKey(User, on_delete = models.CASCADE)
     time = models.DateTimeField()
+    # 1 being LOW and 3 being HIGH
     priority = models.PositiveIntegerField(default = 1)
     items = models.ManyToManyField(Ordered_Item)
 
     def __str__(self):
-        return f"{self.ref_no}, {self.status}"
+        return f"{self.id}, {self.status}"
