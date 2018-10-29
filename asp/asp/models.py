@@ -2,6 +2,27 @@ from django.db import models
 
 # Create your models here.
 
+
+class Hospital(models.Model):
+    SUPPLY='SP'
+    DEMAND='DM'
+    ROLES = (
+        (SUPPLY, 'Supplying Hospital'),
+        (DEMAND, 'Demanding Hospital')
+    )
+    name = models.CharField(max_length = 200)
+    latitude = models.FloatField()
+    longtitude = models.FloatField()
+    altitude = models.FloatField()
+    role = models.CharField(
+        max_length = 2,
+        choices = ROLES,
+        default = DEMAND
+    )
+
+    def __str__(self):
+        return f"{self.name}"
+
 class User(models.Model):
     CLINIC_MANAGER = 'CM'
     DISPATCHER = 'DP'
@@ -16,7 +37,7 @@ class User(models.Model):
 
     username = models.CharField(max_length = 50)
     email = models.EmailField(max_length = 254)
-
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
     role = models.CharField(
         max_length = 2,
         choices = ROLES,
@@ -26,21 +47,27 @@ class User(models.Model):
     def __str__(self):
         return f"{self.username}: {self.role}"
 
+
 class Item(models.Model):
     name = models.CharField(max_length = 200)
+    supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
+    category = models.CharField(max_length = 200)
     description = models.CharField(max_length = 200)
     weight = models.PositiveIntegerField(default = 0)
     quantity = models.PositiveIntegerField(default = 0)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name}, {self.category}"
 
-class Ordered_Item(models.Model):
-    item = models.CharField(max_length = 200)
-    quantity = models.PositiveIntegerField()
+
+# distance is only stored on one side
+class Distance(models.Model):
+    distance = models.FloatField()
+    host_a = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'from_host')
+    host_b = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'to_host')
 
     def __str__(self):
-        return f"{self.item}, {self.quantity}"
+        return f"{self.from_host} -> {self.to_host} : {self.distance}"
 
 # no need to generate ref_no for it cuz it has its unique pk already
 class Order(models.Model):
@@ -68,7 +95,14 @@ class Order(models.Model):
     time = models.DateTimeField()
     # 1 being LOW and 3 being HIGH
     priority = models.PositiveIntegerField(default = 1)
-    items = models.ManyToManyField(Ordered_Item)
-
     def __str__(self):
         return f"{self.id}, {self.status}"
+
+
+class Ordered_Item(models.Model):
+    item = models.CharField(max_length = 200)
+    quantity = models.PositiveIntegerField()
+    order = models.ForeignKey(Order, on_delete = models.CASCADE)
+
+    def __str__(self):
+        return f"{self.item}, {self.quantity}"

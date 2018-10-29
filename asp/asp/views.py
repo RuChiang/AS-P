@@ -3,14 +3,24 @@ from django.views.generic.list import ListView
 from asp.models import Item, Order, Ordered_Item, User
 from django.http import HttpResponse
 from django.utils import timezone
+from asp.forms import SignupForm
 
 # Create your views here.
+
+def signup(request):
+    if request.method == 'POST':
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            # try to create a user here
+            '''
+            TO BE DONE
+            '''
 
 class ItemsViewAll(ListView):
     model = Item
 
 def marketPlace(request):
-    items = Item.objects.all()
+    items = Item.objects.get()
     return render(request, 'asp/marketplace.html', {'item_list':items})
 
 def placeOrder(request):
