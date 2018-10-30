@@ -78,6 +78,7 @@ class ItemsViewAll(ListView):
     model = Item
 
 def marketPlace(request):
+    category
     items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
     return render(request, 'asp/marketplace.html', {'item_list':items})
 

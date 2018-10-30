@@ -47,17 +47,23 @@ class UserExt(models.Model):
     def __str__(self):
         return f"{self.user.username}: {self.role}"
 
+class Category(models.Model):
+    name = models.CharField(max_length = 200)
+
+    def __str__(self):
+        return f"{self.name}"
+
 
 class Item(models.Model):
     name = models.CharField(max_length = 200)
     supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
-    category = models.CharField(max_length = 200)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     description = models.CharField(max_length = 200)
     weight = models.FloatField(default = 0)
     quantity = models.PositiveIntegerField(default = 0)
 
     def __str__(self):
-        return f"{self.name}, {self.category}"
+        return f"{self.name}"
 
 
 # distance is only stored on one side
