@@ -67,7 +67,7 @@ class Distance(models.Model):
     host_b = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'to_host')
 
     def __str__(self):
-        return f"{self.from_host} -> {self.to_host} : {self.distance}"
+        return f"{self.host_a} -> {self.host_b} : {self.distance}"
 
 # no need to generate ref_no for it cuz it has its unique pk already
 class Order(models.Model):
