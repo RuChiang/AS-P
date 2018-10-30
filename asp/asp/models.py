@@ -53,7 +53,7 @@ class Item(models.Model):
     supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
     category = models.CharField(max_length = 200)
     description = models.CharField(max_length = 200)
-    weight = models.PositiveIntegerField(default = 0)
+    weight = models.FloatField(default = 0)
     quantity = models.PositiveIntegerField(default = 0)
 
     def __str__(self):

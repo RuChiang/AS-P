@@ -3,11 +3,12 @@ from django.views.generic.list import ListView
 from asp.models import Item, Order, Ordered_Item, User
 from django.http import HttpResponse
 from django.utils import timezone
-from asp.forms import SignupForm
+from asp.forms import SignupForm, LoginForm
 
 # Create your views here.
 
-def signup(request):
+def login(request):
+    #  if it is post, it means user is signing up
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
@@ -15,31 +16,62 @@ def signup(request):
             '''
             TO BE DONE
             '''
+    #  a get method means the user want the form
+    elif request.method == 'GET':
+        form = LoginForm()
+        return render(request, 'asp/signup-login.html', {'form':form})
+    # # dunno which HTTP method its using
+    else:
+        return HttpResponse("how did you even got here?")
+
+
+
+def signup(request):
+    #  if it is post, it means user is signing up
+    if request.method == 'POST':
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            # try to create a user here
+            '''
+            TO BE DONE
+            '''
+    #  a get method means the user want the form
+    elif request.method == 'GET':
+        form = SignupForm()
+        return render(request, 'asp/signup-login.html', {'form':form})
+    # # dunno which HTTP method its using
+    else:
+        return HttpResponse("how did you even got here?")
+
 
 class ItemsViewAll(ListView):
     model = Item
 
 def marketPlace(request):
-    items = Item.objects.get()
+    items = Item.objects.filter(supplying_hospital = User.objects.all()[0].hospital)
     return render(request, 'asp/marketplace.html', {'item_list':items})
 
 def placeOrder(request):
     weight_limit = 23.8
-    items = Item.objects.all()
+    items = Item.objects.filter(supplying_hospital = User.objects.all()[0].hospital)
     orders_items = {}
     if request.method == 'GET':
+        # see if this is simply routing
+        if len(request.GET) == 0:
+            return render(request, 'asp/marketplace.html', {'item_list':items })
         in_stock = True
         # extract the order details into the order dict
+        req_priority = 1
         for item in request.GET:
             if item != 'priority':
                 orders_items[str(item)] = int(request.GET[item])
             else:
                 if request.GET[item] == 'low':
-                    priority = 1
+                    req_priority = 1
                 elif request.GET[item] == 'medium':
-                    priority = 2
+                    req_priority = 2
                 elif request.GET[item] == 'high':
-                    priority = 3
+                    req_priority = 3
 
         for orders_item in orders_items:
             # check if the stock is enough
@@ -52,24 +84,23 @@ def placeOrder(request):
             msg = "Please input values for those supplies which you would like to order"
             return render(request, 'asp/marketplace.html', {'warning':msg, 'item_list':items })
 
+        Order_model = Order(status='QFP', requester = User.objects.all()[0] , time=timezone.now(), priority=req_priority)
+        Order_model.save()
+
         # create an order, and subtract the quantity of the available supplies
         OrderedItem_models = []
         for orders_item in orders_items:
             item_in_db = Item.objects.get(name=str(orders_item))
             item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
             item_in_db.save()
-            new_ordered_item = Ordered_Item(item = str(orders_item), quantity = orders_items[orders_item])
+            new_ordered_item = Ordered_Item(item = str(orders_item), quantity = orders_items[orders_item], order = Order_model)
             new_ordered_item.save()
             OrderedItem_models.append(new_ordered_item)
 
         # think about how to relate to the requester
         # add a field for the priority
         # are there other ways to simplify this logic?
-        Order_model = Order(status='QFP', requester = User.objects.all()[0] , time=timezone.now(), priority=priority)
-        Order_model.save()
-        for OrderedItem_model in OrderedItem_models:
-            Order_model.items.add(OrderedItem_model)
-        Order_model.save()
+
 
         msg = "order successfully placed"
         return render(request, 'asp/marketplace.html', {'success':msg, 'item_list':items })
