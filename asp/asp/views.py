@@ -1,44 +1,74 @@
 from django.shortcuts import render
 from django.views.generic.list import ListView
-from asp.models import Item, Order, Ordered_Item, User
+from asp.models import Item, Order, Ordered_Item, UserExt, Hospital
 from django.http import HttpResponse
 from django.utils import timezone
 from asp.forms import SignupForm, LoginForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+
 
 # Create your views here.
 
-def login(request):
-    #  if it is post, it means user is signing up
+def logout_view(request):
+    logout(request)
+    return HttpResponse("logged out!!")
+
+def login_view(request):
+    #  if it is post, it means user is logging in
     if request.method == 'POST':
-        form = SignupForm(request.POST)
+        form = LoginForm(request.POST)
         if form.is_valid():
             # try to create a user here
-            '''
-            TO BE DONE
-            '''
+
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(username = username, password=password)
+            if user is not None:
+                login(request, user)
+                return HttpResponse("logged in!!")
+            else:
+                return HttpResponse("No such user")
+
+        # form not valid, sign in again
+        else:
+            return HttpResponse("wrong" + str(form.errors))
+
     #  a get method means the user want the form
     elif request.method == 'GET':
         form = LoginForm()
-        return render(request, 'asp/signup-login.html', {'form':form})
+        return render(request, 'asp/login.html', {'form':form})
     # # dunno which HTTP method its using
     else:
         return HttpResponse("how did you even got here?")
 
 
 
-def signup(request):
+def signup_view(request):
     #  if it is post, it means user is signing up
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
             # try to create a user here
-            '''
-            TO BE DONE
-            '''
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            user = User.objects.create_user(username, email, password)
+            user.save()
+            userExt = UserExt(
+                user = user,
+                hospital = Hospital.objects.get(name = form.cleaned_data['hospital']),
+                role = form.cleaned_data['role']
+            )
+            userExt.save()
+            login(request, user)
+            return HttpResponse("signed up successfully. The system has logged you in as well")
+        else:
+            return HttpResponse("wrong" + str(form.errors))
     #  a get method means the user want the form
     elif request.method == 'GET':
         form = SignupForm()
-        return render(request, 'asp/signup-login.html', {'form':form})
+        return render(request, 'asp/signup.html', {'form':form})
     # # dunno which HTTP method its using
     else:
         return HttpResponse("how did you even got here?")
@@ -48,12 +78,12 @@ class ItemsViewAll(ListView):
     model = Item
 
 def marketPlace(request):
-    items = Item.objects.filter(supplying_hospital = User.objects.all()[0].hospital)
+    items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
     return render(request, 'asp/marketplace.html', {'item_list':items})
 
 def placeOrder(request):
     weight_limit = 23.8
-    items = Item.objects.filter(supplying_hospital = User.objects.all()[0].hospital)
+    items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
     orders_items = {}
     if request.method == 'GET':
         # see if this is simply routing
@@ -84,7 +114,7 @@ def placeOrder(request):
             msg = "Please input values for those supplies which you would like to order"
             return render(request, 'asp/marketplace.html', {'warning':msg, 'item_list':items })
 
-        Order_model = Order(status='QFP', requester = User.objects.all()[0] , time=timezone.now(), priority=req_priority)
+        Order_model = Order(status='QFP', requester = UserExt.objects.filter(user = request.user)[0] , time=timezone.now(), priority=req_priority)
         Order_model.save()
 
         # create an order, and subtract the quantity of the available supplies

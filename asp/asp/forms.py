@@ -11,10 +11,11 @@ class SignupForm(forms.Form):
         (WAREHOUSE_PERSONNEL, 'Warehouse Personnel'),
         (ADMIN, 'Admin')
     )
+
     username = forms.CharField(label='name', max_length = 50)
     password = forms.CharField(label='password', max_length = 50)
     email = forms.EmailField(max_length = 254)
-    hospital = forms.CharField(label='password', max_length = 50)
+    hospital = forms.CharField(label='hospital', max_length = 50)
     role = forms.ChoiceField(choices = ROLES)
 
 class LoginForm(forms.Form):

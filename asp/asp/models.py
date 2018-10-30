@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -23,7 +24,7 @@ class Hospital(models.Model):
     def __str__(self):
         return f"{self.name}"
 
-class User(models.Model):
+class UserExt(models.Model):
     CLINIC_MANAGER = 'CM'
     DISPATCHER = 'DP'
     WAREHOUSE_PERSONNEL = 'WP'
@@ -35,8 +36,7 @@ class User(models.Model):
         (ADMIN, 'Admin')
     )
 
-    username = models.CharField(max_length = 50)
-    email = models.EmailField(max_length = 254)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
     role = models.CharField(
         max_length = 2,
@@ -45,7 +45,7 @@ class User(models.Model):
     )
 
     def __str__(self):
-        return f"{self.username}: {self.role}"
+        return f"{self.user.username}: {self.role}"
 
 
 class Item(models.Model):
@@ -91,7 +91,7 @@ class Order(models.Model):
         default = QUEUED_FOR_PROCESSING
     )
 
-    requester = models.ForeignKey(User, on_delete = models.CASCADE)
+    requester = models.ForeignKey(UserExt, on_delete = models.CASCADE)
     time = models.DateTimeField()
     # 1 being LOW and 3 being HIGH
     priority = models.PositiveIntegerField(default = 1)
