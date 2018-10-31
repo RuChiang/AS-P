@@ -6,6 +6,7 @@ from django.utils import timezone
 from asp.forms import SignupForm, LoginForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from asp import utils
 
 
 # Create your views here.
@@ -78,13 +79,14 @@ class ItemsViewAll(ListView):
     model = Item
 
 def marketPlace(request):
-    category
-    items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
+    # items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
+    items = utils.arrange_items_by_category(request.user)
     return render(request, 'asp/marketplace.html', {'item_list':items})
 
 def placeOrder(request):
     weight_limit = 23.8
-    items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
+    # items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
+    items = utils.arrange_items_by_category(request.user)
     orders_items = {}
     if request.method == 'GET':
         # see if this is simply routing
@@ -106,22 +108,25 @@ def placeOrder(request):
 
         for orders_item in orders_items:
             # check if the stock is enough
-            if orders_items[orders_item] > int(Item.objects.get(name=str(orders_item)).quantity):
+            if orders_items[orders_item] > int(Item.objects.get(
+                supplying_hospital = UserExt.objects.get(user = request.user).hospital,
+                name = str(orders_item)).quantity
+                ):
                 msg = "no enough stock in " + str(orders_item) + " please place your order again"
                 return render(request, 'asp/marketplace.html', {'err':msg, 'item_list':items })
         # no order placed and click placeOrder
-        all_zero_order =  True if 0 not in orders_items.values() else False
-        if not all_zero_order:
+        all_zero_order =  True if all(v == 0 for v in orders_items.values()) else False
+        if all_zero_order:
             msg = "Please input values for those supplies which you would like to order"
             return render(request, 'asp/marketplace.html', {'warning':msg, 'item_list':items })
 
-        Order_model = Order(status='QFP', requester = UserExt.objects.filter(user = request.user)[0] , time=timezone.now(), priority=req_priority)
+        Order_model = Order(status='QFP', requester = UserExt.objects.get(user = request.user) , time=timezone.now(), priority=req_priority)
         Order_model.save()
 
         # create an order, and subtract the quantity of the available supplies
         OrderedItem_models = []
         for orders_item in orders_items:
-            item_in_db = Item.objects.get(name=str(orders_item))
+            item_in_db = Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).hospital, name=str(orders_item))
             item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
             item_in_db.save()
             new_ordered_item = Ordered_Item(item = str(orders_item), quantity = orders_items[orders_item], order = Order_model)

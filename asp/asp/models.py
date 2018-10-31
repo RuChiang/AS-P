@@ -63,7 +63,7 @@ class Item(models.Model):
     quantity = models.PositiveIntegerField(default = 0)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"Category: {self.category.name} | Name: {self.name} | Supplying_Hospital: {self.supplying_hospital.name} | Quantity: {self.quantity}"
 
 
 # distance is only stored on one side
@@ -73,7 +73,7 @@ class Distance(models.Model):
     host_b = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'to_host')
 
     def __str__(self):
-        return f"{self.host_a} -> {self.host_b} : {self.distance}"
+        return f"{self.host_a} <-> {self.host_b} : {self.distance}"
 
 # no need to generate ref_no for it cuz it has its unique pk already
 class Order(models.Model):
@@ -102,7 +102,7 @@ class Order(models.Model):
     # 1 being LOW and 3 being HIGH
     priority = models.PositiveIntegerField(default = 1)
     def __str__(self):
-        return f"{self.id}, {self.status}"
+        return f"Order_id:{self.id} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time}"
 
 
 class Ordered_Item(models.Model):
@@ -111,4 +111,4 @@ class Ordered_Item(models.Model):
     order = models.ForeignKey(Order, on_delete = models.CASCADE)
 
     def __str__(self):
-        return f"{self.item}, {self.quantity}"
+        return f"Order: {self.order.id} | Name: {self.item} | Quantity: {self.quantity}"

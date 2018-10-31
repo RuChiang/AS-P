@@ -11,12 +11,24 @@
 
 <form action="/asp/placeOrder" method="get">
     <ul>
-    {% for item in item_list %}
-         <li><label for={{item.name}}> {{ item }}  - </label>
-         <input id={{item.name}} type="number" name={{item.name}} value="0"></li>
+    {% for category, items in item_list.items %}
+         <li>
+             <h3>{{category}}</h3>
+             <ol>
+                 {% for item in items %}
+                    <li>
+                        <label for={{item.name}}> {{ item.name }}  - </label>
+                        <input id={{item.name}} type="number" name={{item.name}} value="0">
+                        <br>
+                        <span>Description - {{item.description}}</span>
+                        <br>
+                        <span>Shipping Wieght - {{item.weight}}</span>
+                    </li>
+                 {% endfor %}
+             </ol>
     {% endfor %}
     </ul>
-    <li><label for=priority> Priority  - </label>
+    <label for=priority> Priority  - </label>
     <select name="priority" id="priority">
         <option value="low">Low</option>
         <option value="medium">Medium</option>
