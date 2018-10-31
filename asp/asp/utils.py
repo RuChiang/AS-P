@@ -14,10 +14,10 @@ def arrange_items_by_category(logged_in_user):
 def getTotalWeight(orderID):
     sumWeight = 0.0
     # ID of all ordered items from current order
-    for i in Available_Item.objects.filter(order_id = orderID).values('item'):
+    for i in Ordered_Item.objects.filter(order = orderID.id):
         # Find its weight
-        # sumWeight += Item.objects.get(name = i['item']).weight
-        sumWeight += Item.objects.filter(name = i['item'])[0].weight
+        sumWeight += Item.objects.get(name = i.item.name).weight * i.quantity
+    print(sumWeight)
     return sumWeight
 
 def generateCSV():

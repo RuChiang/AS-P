@@ -173,7 +173,7 @@ def viewDispatch(request):
     if len(ordersToDispatch) >= 1:
         pdf = utils.generateCSV()
     for i in ordersToDispatch:
-        sumWeight += utils.getTotalWeight(i.id)
+        sumWeight += utils.getTotalWeight(i)
         if sumWeight > weightLimit:
             break
         count += 1

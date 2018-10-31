@@ -2,7 +2,11 @@ from django import forms
 from asp.models import Hospital
 
 def getHospitalNames():
-    return Hospital.objects.all().values_list('id', 'name')
+    hospitals = Hospital.objects.all()
+    NAMES = []
+    for hospital in hospitals:
+        NAMES.append((hospital.name, hospital.name))
+    return tuple(NAMES)
 
 class SignupForm(forms.Form):
     CLINIC_MANAGER = 'CM'
