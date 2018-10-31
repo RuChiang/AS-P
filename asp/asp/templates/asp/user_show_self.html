@@ -1,0 +1,9 @@
+{% extends "asp/header.html" %}
+{% block content %}
+<h4>User View Self</h4>
+<ul>
+{% for item in item_list %}
+    {{item}}<br>
+{% endfor %}
+</ul>
+{% endblock %}

@@ -56,14 +56,21 @@ class Category(models.Model):
 
 class Item(models.Model):
     name = models.CharField(max_length = 200)
-    supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     description = models.CharField(max_length = 200)
     weight = models.FloatField(default = 0)
+    # image = models.ImageField(null = True)
+
+    def __str__(self):
+        return f"Category: {self.category.name} | Name: {self.name}"
+
+class Available_Item(models.Model):
+    item_abstract = models.ForeignKey(Item, on_delete=models.CASCADE)
+    supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default = 0)
 
     def __str__(self):
-        return f"Category: {self.category.name} | Name: {self.name} | Supplying_Hospital: {self.supplying_hospital.name} | Quantity: {self.quantity}"
+        return f"Name: {self.item_abstract.name} | Supplying_Hospital: {self.supplying_hospital.name} | Quantity: {self.quantity}"
 
 
 # distance is only stored on one side
@@ -107,7 +114,7 @@ class Order(models.Model):
     time_dispatched = models.DateTimeField(null = True)
     time_delivered = models.DateTimeField(null = True)
     def __str__(self):
-        return f"Order_id:{self.id} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time}"
+        return f"Order_id:{self.id} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time_queued_processing}"
 
 
 class Ordered_Item(models.Model):

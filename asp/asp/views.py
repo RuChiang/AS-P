@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic.list import ListView
-from asp.models import Item, Order, Ordered_Item, UserExt, Hospital
+from asp.models import Item, Order, Ordered_Item, UserExt, Hospital, Available_Item
 from django.http import HttpResponse
 from django.utils import timezone
 from asp.forms import SignupForm, LoginForm
@@ -74,7 +74,18 @@ def signupView(request):
 
 
 class ItemsViewAll(ListView):
-    model = Item
+    model = Available_Item
+
+def UserViewSelf(request):
+    user = request.user
+    userext = UserExt.objects.get(user = request.user)
+    items = []
+    items.append(user.username)
+    items.append(user.email)
+    items.append(userext.hospital.name)
+    items.append(userext.role)
+    # print(items)
+    return render(request, 'asp/user_show_self.html', {'item_list':items})
 
 def marketPlace(request):
     # items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
@@ -106,9 +117,9 @@ def placeOrder(request):
 
         for orders_item in orders_items:
             # check if the stock is enough
-            if orders_items[orders_item] > int(Item.objects.get(
+            if orders_items[orders_item] > int(Available_Item.objects.get(
                 supplying_hospital = UserExt.objects.get(user = request.user).hospital,
-                name = str(orders_item)).quantity
+                item_abstract = Item.objects.get(name = str(orders_item))).quantity
                 ):
                 msg = "no enough stock in " + str(orders_item) + " please place your order again"
                 return render(request, 'asp/marketplace.html', {'err':msg, 'item_list':items })
@@ -118,18 +129,17 @@ def placeOrder(request):
             msg = "Please input values for those supplies which you would like to order"
             return render(request, 'asp/marketplace.html', {'warning':msg, 'item_list':items })
 
-        Order_model = Order(status='QFP', requester = UserExt.objects.get(user = request.user) , time=timezone.now(), priority=req_priority)
+        Order_model = Order(status='QFP', requester = UserExt.objects.get(user = request.user) , time_queued_processing=timezone.now(), priority=req_priority)
         Order_model.save()
 
         # create an order, and subtract the quantity of the available supplies
-        OrderedItem_models = []
         for orders_item in orders_items:
-            item_in_db = Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).hospital, name=str(orders_item))
-            item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
-            item_in_db.save()
-            new_ordered_item = Ordered_Item(item = str(orders_item), quantity = orders_items[orders_item], order = Order_model)
-            new_ordered_item.save()
-            OrderedItem_models.append(new_ordered_item)
+            if orders_items[orders_item] != 0:
+                item_in_db = Available_Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).hospital, item_abstract = Item.objects.get(name = str(orders_item)))
+                item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
+                item_in_db.save()
+                new_ordered_item = Ordered_Item(item = str(orders_item), quantity = orders_items[orders_item], order = Order_model)
+                new_ordered_item.save()
 
         # think about how to relate to the requester
         # add a field for the priority

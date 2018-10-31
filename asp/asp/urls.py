@@ -4,6 +4,7 @@ from asp import views
 
 urlpatterns = [
     path('items', views.ItemsViewAll.as_view(), name='items'),
+    path('self', views.UserViewSelf, name='self'),
     path('marketplace', views.marketPlace, name='marketplace'),
     path('placeOrder', views.placeOrder, name='placeOrder'),
     path('login', views.loginView, name='login'),

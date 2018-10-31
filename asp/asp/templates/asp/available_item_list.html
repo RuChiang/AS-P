@@ -1,0 +1,18 @@
+<h1>Available Item</h1>
+<ul>
+{% for item in available_item_list %}
+    <li>
+        Name: {{ item.item_abstract.name }}
+        <br>
+        Supplying Hospital: {{ item.supplying_hospital }}
+        <br>
+        Quantity: {{ item.quantity }}
+    </li>
+{% empty %}
+    <li>No item yet</li>
+{% endfor %}
+</ul>
+
+<form action="/total_weight/" method="get">
+
+</form>
