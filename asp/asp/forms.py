@@ -1,4 +1,8 @@
 from django import forms
+from asp.models import Hospital
+
+def getHospitalNames():
+    return Hospital.objects.all().values_list('id', 'name')
 
 class SignupForm(forms.Form):
     CLINIC_MANAGER = 'CM'
@@ -15,7 +19,7 @@ class SignupForm(forms.Form):
     username = forms.CharField(label='name', max_length = 50)
     password = forms.CharField(label='password', max_length = 50)
     email = forms.EmailField(max_length = 254)
-    hospital = forms.CharField(label='hospital', max_length = 50)
+    hospital = forms.ChoiceField(choices=getHospitalNames())
     role = forms.ChoiceField(choices = ROLES)
 
 class LoginForm(forms.Form):

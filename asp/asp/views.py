@@ -11,11 +11,11 @@ from asp import utils
 
 # Create your views here.
 
-def logout_view(request):
+def logoutView(request):
     logout(request)
     return HttpResponse("logged out!!")
 
-def login_view(request):
+def loginView(request):
     #  if it is post, it means user is logging in
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -43,9 +43,7 @@ def login_view(request):
     else:
         return HttpResponse("how did you even got here?")
 
-
-
-def signup_view(request):
+def signupView(request):
     #  if it is post, it means user is signing up
     if request.method == 'POST':
         form = SignupForm(request.POST)
@@ -144,3 +142,26 @@ def placeOrder(request):
 
     else:
         return HttpResponse("requested with invalid method")
+
+
+def getTotalWeight(orderID):
+    sumWeight = 0.0
+    # ID of all ordered items from current order
+    for i in Ordered_Item.objects.filter(id = orderID).values_list('id'):
+        # Find its weight
+        sumWeight += Order.objects.filter(id = i).values('weight')
+    return sumWeight
+
+def dispatch(request):
+    ordersToDispatch = Order.objects.filter(status = 'QFD').order_by('priority', 'time_queued_processing')
+    weightLimit = 23.8
+    count = 1
+    sumWeight = 0.0
+    for i in ordersToDispatch:
+        sumWeight += getTotalWeight(i.objects.values('id'))
+        if sumWeight > weightLimit:
+            break
+        count += 1
+    print(count)
+
+    render(request, 'asp/dispatch.html', context)

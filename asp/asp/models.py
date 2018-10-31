@@ -69,11 +69,11 @@ class Item(models.Model):
 # distance is only stored on one side
 class Distance(models.Model):
     distance = models.FloatField()
-    host_a = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'from_host')
-    host_b = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'to_host')
+    hospital_a = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'from_host')
+    hospital_b = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'to_host')
 
     def __str__(self):
-        return f"{self.host_a} <-> {self.host_b} : {self.distance}"
+        return f"{self.hospital_a} <-> {self.hospital_b} : {self.distance}"
 
 # no need to generate ref_no for it cuz it has its unique pk already
 class Order(models.Model):
@@ -86,7 +86,7 @@ class Order(models.Model):
     STATUS = (
         (QUEUED_FOR_PROCESSING, 'Queued for Processing'),
         (PROCESSING_BY_WAREHOUSE, 'Processing by Warehouse'),
-        (QUEUED_FOR_DISPATCH, 'Queued for Dispatched'),
+        (QUEUED_FOR_DISPATCH, 'Queued for Dispatch'),
         (DISPATCHED, 'Dispatched'),
         (DELIVERED, 'Delivered')
     )
@@ -98,9 +98,14 @@ class Order(models.Model):
     )
 
     requester = models.ForeignKey(UserExt, on_delete = models.CASCADE)
-    time = models.DateTimeField()
     # 1 being LOW and 3 being HIGH
     priority = models.PositiveIntegerField(default = 1)
+    # All important time stamps for Health Authority
+    time_queued_processing = models.DateTimeField()
+    time_processing = models.DateTimeField(null = True)
+    time_queued_dispatch = models.DateTimeField(null = True)
+    time_dispatched = models.DateTimeField(null = True)
+    time_delivered = models.DateTimeField(null = True)
     def __str__(self):
         return f"Order_id:{self.id} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time}"
 

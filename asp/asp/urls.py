@@ -6,10 +6,10 @@ urlpatterns = [
     path('items', views.ItemsViewAll.as_view(), name='items'),
     path('marketplace', views.marketPlace, name='marketplace'),
     path('placeOrder', views.placeOrder, name='placeOrder'),
-    path('login', views.login_view, name='login'),
-    path('signup', views.signup_view, name='signup'),
-    path('logout', views.logout_view, name='logout'),
-
+    path('login', views.loginView, name='login'),
+    path('signup', views.signupView, name='signup'),
+    path('logout', views.logoutView, name='logout'),
+    path('dispatch', views.dispatch, name='dispatch'),
 
 
 ]
