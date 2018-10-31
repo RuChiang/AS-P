@@ -118,7 +118,7 @@ class Order(models.Model):
 
 
 class Ordered_Item(models.Model):
-    item = models.CharField(max_length = 200)
+    item = models.ForeignKey(Item, on_delete = models.CASCADE)
     quantity = models.PositiveIntegerField()
     order = models.ForeignKey(Order, on_delete = models.CASCADE)
 

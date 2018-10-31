@@ -138,7 +138,7 @@ def placeOrder(request):
                 item_in_db = Available_Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).hospital, item_abstract = Item.objects.get(name = str(orders_item)))
                 item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
                 item_in_db.save()
-                new_ordered_item = Ordered_Item(item = str(orders_item), quantity = orders_items[orders_item], order = Order_model)
+                new_ordered_item = Ordered_Item(item = Item.objects.get(name = str(orders_item)), quantity = orders_items[orders_item], order = Order_model)
                 new_ordered_item.save()
 
         # think about how to relate to the requester
