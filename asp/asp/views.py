@@ -171,10 +171,11 @@ def viewDispatch(request):
     count = 0
     sumWeight = 0.0
     if len(ordersToDispatch) >= 1:
-        pdf = utils.generateCSV()
-    for i in ordersToDispatch:
-        sumWeight += utils.getTotalWeight(i)
-        if sumWeight > weightLimit:
-            break
-        count += 1
+        utils.generateCSV('as')
+        utils.generateItinerary()
+        for i in ordersToDispatch:
+            sumWeight += utils.getTotalWeight(i)
+            if sumWeight > weightLimit:
+                break
+            count += 1
     return render(request, 'asp/dispatch.html', {'orders' : ordersToDispatch[:count], 'count': count})

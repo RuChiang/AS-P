@@ -1,4 +1,5 @@
 from asp.models import Category, Item, UserExt, Ordered_Item, Available_Item
+import csv
 
 def arrange_items_by_category(logged_in_user):
     items_stored_by_category = {}
@@ -17,8 +18,16 @@ def getTotalWeight(orderID):
     for i in Ordered_Item.objects.filter(order = orderID.id):
         # Find its weight
         sumWeight += Item.objects.get(name = i.item.name).weight * i.quantity
-    print(sumWeight)
     return sumWeight
 
-def generateCSV():
+def generateCSV(content):
+    csvData = [['Person', 'Age'], ['Peter', '22'], ['Jasmine', '21'], ['Sam', '24']]
+
+    with open('asp/static/asp/person.csv', 'w') as csvFile:
+        writer = csv.writer(csvFile)
+        writer.writerows(csvData)
+
+    csvFile.close()
+
+def generateItinerary():
     pass
