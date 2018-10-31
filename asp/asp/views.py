@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic.list import ListView
 from asp.models import Item, Order, Ordered_Item, UserExt, Hospital, Available_Item
 from django.http import HttpResponse
@@ -151,27 +151,30 @@ def placeOrder(request):
 
 
     else:
-        return HttpResponse("requested with invalid method")
+        return HttpResponse("requested with invalid method")    
 
-
-def getTotalWeight(orderID):
-    sumWeight = 0.0
-    # ID of all ordered items from current order
-    for i in Ordered_Item.objects.filter(id = orderID).values_list('id'):
-        # Find its weight
-        sumWeight += Order.objects.filter(id = i).values('weight')
-    return sumWeight
-
-def dispatch(request):
-    ordersToDispatch = Order.objects.filter(status = 'QFD').order_by('priority', 'time_queued_processing')
+def viewDispatch(request):
+    ordersToDispatch = Order.objects.filter(status = 'QFD').order_by('-priority', 'time_queued_processing')
+    if request.method == 'POST':
+        if len(request.POST) == 0:
+            return HttpResponse("did you refresh?")
+        count = int(request.POST.get("count"))
+        i = 0
+        for order in ordersToDispatch:
+            order.status = 'DSD'
+            order.save()
+            i+=1
+            if i == count:
+                break
+        return redirect('/asp/viewDispatch')
     weightLimit = 23.8
-    count = 1
+    count = 0
     sumWeight = 0.0
+    if len(ordersToDispatch) >= 1:
+        pdf = utils.generateCSV()
     for i in ordersToDispatch:
-        sumWeight += getTotalWeight(i.objects.values('id'))
+        sumWeight += utils.getTotalWeight(i.id)
         if sumWeight > weightLimit:
             break
         count += 1
-    print(count)
-
-    render(request, 'asp/dispatch.html', context)
+    return render(request, 'asp/dispatch.html', {'orders' : ordersToDispatch[:count], 'count': count})

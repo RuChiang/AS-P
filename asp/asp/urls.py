@@ -10,7 +10,7 @@ urlpatterns = [
     path('login', views.loginView, name='login'),
     path('signup', views.signupView, name='signup'),
     path('logout', views.logoutView, name='logout'),
-    path('dispatch', views.dispatch, name='dispatch'),
+    path('viewDispatch', views.viewDispatch, name='viewDispatch'),
 
 
 ]
