@@ -69,6 +69,11 @@ class Available_Item(models.Model):
     supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default = 0)
 
+    def is_enough(self, quantity):
+        if quantity > self.quantity:
+                return False
+        return True
+
     def __str__(self):
         return f"Name: {self.item_abstract.name} | Supplying_Hospital: {self.supplying_hospital.name} | Quantity: {self.quantity}"
 
@@ -98,6 +103,16 @@ class Order(models.Model):
         (DELIVERED, 'Delivered')
     )
 
+    PRIORITY_HIGH = 3
+    PRIORITY_MEDIUM = 2
+    PRIORITY_LOW = 1
+
+    PRIORITY = (
+        (PRIORITY_HIGH, 'high'),
+        (PRIORITY_MEDIUM, 'medium'),
+        (PRIORITY_LOW, 'low')
+    )
+
     status = models.CharField(
         max_length = 3,
         choices = STATUS,
@@ -106,7 +121,10 @@ class Order(models.Model):
 
     requester = models.ForeignKey(UserExt, on_delete = models.CASCADE)
     # 1 being LOW and 3 being HIGH
-    priority = models.PositiveIntegerField(default = 1)
+    priority = models.PositiveIntegerField(
+        choices = PRIORITY,
+        default = PRIORITY_LOW
+    )
     # All important time stamps for Health Authority
     time_queued_processing = models.DateTimeField()
     time_processing = models.DateTimeField(null = True)
@@ -121,6 +139,20 @@ class Ordered_Item(models.Model):
     item = models.ForeignKey(Item, on_delete = models.CASCADE)
     quantity = models.PositiveIntegerField()
     order = models.ForeignKey(Order, on_delete = models.CASCADE)
+
+    def place_ordered_item(self, orders_item, quantity, order, request):
+        orders_item_abstact =  Item.objects.get(name = str(orders_item))
+        orders_item_supplying_hospital = UserExt.objects.get(user = request.user).hospital
+
+        self.item = orders_item_abstact
+        self.order = order
+        self.quantity = quantity
+        self.save()
+
+        item_in_db = Available_Item.objects.get(supplying_hospital = orders_item_supplying_hospital, item_abstract =orders_item_abstact)
+        item_in_db.quantity = item_in_db.quantity - quantity
+        item_in_db.save()
+
 
     def __str__(self):
         return f"Order: {self.order.id} | Name: {self.item} | Quantity: {self.quantity}"

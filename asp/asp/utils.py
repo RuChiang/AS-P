@@ -12,6 +12,16 @@ def arrange_items_by_category(logged_in_user):
     print(str(items_stored_by_category))
     return items_stored_by_category
 
+def transform_priority_to_integer(priority):
+    if priority == 'low':
+        req_priority = 1
+    elif priority == 'medium':
+        req_priority = 2
+    else:
+        req_priority = 3
+    return req_priority
+
+
 def getTotalWeight(orderID):
     sumWeight = 0.0
     # ID of all ordered items from current order
@@ -29,5 +39,3 @@ def generateCSV(content):
 
     csvFile.close()
 
-def generateItinerary():
-    pass
