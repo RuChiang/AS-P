@@ -39,3 +39,10 @@ def generateCSV(content):
 
     csvFile.close()
 
+def generateItinerary(dispatched_orders):
+    '''
+    dispatched_order_hospitals will be a list containing the Hospital name(a string)
+
+    distance will be a list of tuples which looks like (hospital_a:string, hostpial_b:string, distance:float)
+    '''
+    pass
