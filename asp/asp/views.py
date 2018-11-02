@@ -87,36 +87,43 @@ def UserViewSelf(request):
     # print(items)
     return render(request, 'asp/user_show_self.html', {'item_list':items})
 
-# def marketPlace(request):
-#     # items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
-#     items = utils.arrange_items_by_category(request.user)
-#     return render(request, 'asp/marketplace.html', {'item_list':items})
+def marketPlace(request):
+    # items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
+    items = utils.arrange_items_by_category(request.user)
+    return render(request, 'asp/marketplace.html', {'item_list':items})
 
-def marketplace(request):
+def placeOrder(request):
+    weight_limit = 23.8
+    # items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
     items = utils.arrange_items_by_category(request.user)
     orders_items = {}
     if request.method == 'GET':
-        # if simply accessing this site, it's the view supplies use case
+        # see if this is simply routing
         if len(request.GET) == 0:
             return render(request, 'asp/marketplace.html', {'item_list':items })
+        in_stock = True
         # extract the order details into the order dict
-        # #transform
         req_priority = 1
         for item in request.GET:
             if item != 'priority':
                 orders_items[str(item)] = int(request.GET[item])
             else:
-                req_priority = utils.transform_priority_to_integer(request.GET[item])
+                if request.GET[item] == 'low':
+                    req_priority = 1
+                elif request.GET[item] == 'medium':
+                    req_priority = 2
+                elif request.GET[item] == 'high':
+                    req_priority = 3
 
         for orders_item in orders_items:
-            orders_item_abstract = Item.objects.get(name = str(orders_item))
-            orders_item_supplying_hospital = UserExt.objects.get(user = request.user).hospital
-            if not Available_Item.objects.get(item_abstract = orders_item_abstract,
-                supplying_hospital = orders_item_supplying_hospital
-                ).is_enough(orders_items[orders_item]):
+            # check if the stock is enough
+            if orders_items[orders_item] > int(Available_Item.objects.get(
+                supplying_hospital = UserExt.objects.get(user = request.user).hospital,
+                item_abstract = Item.objects.get(name = str(orders_item))).quantity
+                ):
                 msg = "no enough stock in " + str(orders_item) + " please place your order again"
                 return render(request, 'asp/marketplace.html', {'err':msg, 'item_list':items })
-
+        # no order placed and click placeOrder
         all_zero_order =  True if all(v == 0 for v in orders_items.values()) else False
         if all_zero_order:
             msg = "Please input values for those supplies which you would like to order"
@@ -125,42 +132,66 @@ def marketplace(request):
         Order_model = Order(status='QFP', requester = UserExt.objects.get(user = request.user) , time_queued_processing=timezone.now(), priority=req_priority)
         Order_model.save()
 
-        # create an ordered_item, and subtract the quantity of the available supplies
+        # create an order, and subtract the quantity of the available supplies
         for orders_item in orders_items:
             if orders_items[orders_item] != 0:
-                new_ordered_item = Ordered_Item()
-                new_ordered_item.place_ordered_item(orders_item, orders_items[orders_item], Order_model, request)
+                item_in_db = Available_Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).hospital, item_abstract = Item.objects.get(name = str(orders_item)))
+                item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
+                item_in_db.save()
+                new_ordered_item = Ordered_Item(item = Item.objects.get(name = str(orders_item)), quantity = orders_items[orders_item], order = Order_model)
+                new_ordered_item.save()
+
+        # think about how to relate to the requester
+        # add a field for the priority
+        # are there other ways to simplify this logic?
+
 
         msg = "order successfully placed"
-        items = utils.arrange_items_by_category(request.user)
         return render(request, 'asp/marketplace.html', {'success':msg, 'item_list':items })
 
+
     else:
-        return HttpResponse("requested with invalid method")
+        return HttpResponse("requested with invalid method")    
 
 def viewDispatch(request):
     ordersToDispatch = Order.objects.filter(status = 'QFD').order_by('-priority', 'time_queued_processing')
+    # Only happens after one group was already dispatched
     if request.method == 'POST':
+        # Should never trigger
         if len(request.POST) == 0:
             return HttpResponse("did you refresh?")
         count = int(request.POST.get("count"))
         i = 0
+        # Change to dispatched
         for order in ordersToDispatch:
             order.status = 'DSD'
             order.save()
             i+=1
             if i == count:
                 break
+        # Refresh to not have a POST method in request
         return redirect('/asp/viewDispatch')
     weightLimit = 23.8
     count = 0
     sumWeight = 0.0
+    ityHospitals = list()
     if len(ordersToDispatch) >= 1:
-        utils.generateCSV('as')
-        utils.generateItinerary()
         for i in ordersToDispatch:
+            # For checking how many orders to group together
             sumWeight += utils.getTotalWeight(i)
+            # For finding the corresponding clinic of the order
+            ityHospitals.append(UserExt.objects.get(id = i.requester.id).hospital)
+            # Weight limit exceeded, don't count anymore
             if sumWeight > weightLimit:
                 break
             count += 1
+        for i in ordersToDispatch:
+            hospital = utils.getSupplyingHospital(i)
+            ityHospitals.append(hospital)
+            break
+        vertices = list()
+        for x in ityHospitals:
+            if x not in vertices:
+                vertices.append(x)
+        utils.generateItinerary(vertices)
     return render(request, 'asp/dispatch.html', {'orders' : ordersToDispatch[:count], 'count': count})

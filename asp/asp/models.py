@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+import collections
 # Create your models here.
 
 
@@ -131,6 +131,7 @@ class Order(models.Model):
     time_queued_dispatch = models.DateTimeField(null = True)
     time_dispatched = models.DateTimeField(null = True)
     time_delivered = models.DateTimeField(null = True)
+
     def __str__(self):
         return f"Order_id:{self.id} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time_queued_processing}"
 
