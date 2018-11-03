@@ -32,13 +32,13 @@ def transform_priority_to_integer(priority):
         req_priority = 3
     return req_priority
 
-def getTotalWeight(orderID):
-    sumWeight = 0.0
-    # ID of all ordered items from current order
-    for i in Ordered_Item.objects.filter(order = orderID.id):
-        # Find its weight
-        sumWeight += Item.objects.get(name = i.item.name).weight * i.quantity
-    return sumWeight
+# def getTotalWeight(orderID):
+#     sumWeight = 0.0
+#     # ID of all ordered items from current order
+#     for i in Ordered_Item.objects.filter(order = orderID.id):
+#         # Find its weight
+#         sumWeight += Item.objects.get(name = i.item.name).weight * i.quantity
+#     return sumWeight
 
 def generateCSV(content):
     csvData = [['Person', 'Age'], ['Peter', '22'], ['Jasmine', '21'], ['Sam', '24']]
@@ -96,5 +96,6 @@ def generateItinerary(listOfHospitals):
     order = shortest_route(graph, listOfHospitals[len(listOfHospitals)-1], len(listOfHospitals))
     ityData = list()
     for i in order:
-        ityData.append(str(Hospital.objects.get(name = i)))
-    generateCSV(ityData)
+        ityData.append(Hospital.objects.get(name = i))
+    print(ityData)
+    # generateCSV(ityData)

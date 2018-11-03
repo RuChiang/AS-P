@@ -38,6 +38,7 @@ class UserExt(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
+    # supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
     role = models.CharField(
         max_length = 2,
         choices = ROLES,
@@ -131,6 +132,14 @@ class Order(models.Model):
     time_queued_dispatch = models.DateTimeField(null = True)
     time_dispatched = models.DateTimeField(null = True)
     time_delivered = models.DateTimeField(null = True)
+
+    def getTotalWeight(self):
+        sumWeight = 0.0
+        # ID of all ordered items from current order
+        for item in Ordered_Item.objects.filter(order = self.id):
+            # Find its weight
+            sumWeight += Item.objects.get(name = item.item.name).weight * item.quantity
+        return sumWeight
 
     def __str__(self):
         return f"Order_id:{self.id} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time_queued_processing}"
