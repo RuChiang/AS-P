@@ -1,5 +1,9 @@
 from django.urls import path
 from asp import views
+from django.conf.urls.static import static
+from django.conf import settings
+
+
 
 
 urlpatterns = [
@@ -10,4 +14,6 @@ urlpatterns = [
     path('signup', views.signupView, name='signup'),
     path('logout', views.logoutView, name='logout'),
     path('viewDispatch', views.viewDispatch, name='viewDispatch'),
+    path('downloadItinerary', views.downloadItinerary, name='downloadItinerary'),
+
 ]

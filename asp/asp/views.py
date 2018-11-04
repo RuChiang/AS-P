@@ -7,9 +7,17 @@ from asp.forms import SignupForm, LoginForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from asp import utils
+import os
 
 
 # Create your views here.
+
+def downloadItinerary(request):
+    file = open('asp/static/asp/itinerary.csv', 'rb')
+    response = HttpResponse(content=file,content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="itinerary.csv"'
+    return response
+
 
 def logoutView(request):
     logout(request)
@@ -151,41 +159,46 @@ def viewDispatch(request):
     ordersToDispatch = Order.objects.filter(status = 'QFD').order_by('-priority', 'time_queued_processing')
     # Only happens after one group was already dispatched
     if request.method == 'POST':
-        # Should never trigger
-        if len(request.POST) == 0:
-            return HttpResponse("did you refresh?")
         count = int(request.POST.get("count"))
         i = 0
         # Change to dispatched
         for order in ordersToDispatch:
             order.status = 'DSD'
+            order.time_dispatched = timezone.now()
             order.save()
             i+=1
             if i == count:
                 break
         # Refresh to not have a POST method in request
         return redirect('/asp/viewDispatch')
-    weightLimit = 23.8
-    count = 0
-    sumWeight = 0.0
-    ityHospitals = list()
-    if len(ordersToDispatch) >= 1:
-        for order in ordersToDispatch:
-            # For checking how many orders to group together
-            sumWeight += order.getTotalWeight()
-            # For finding the corresponding clinic of the order
-            ityHospitals.append(UserExt.objects.get(id = order.requester.id).hospital)
-            # Weight limit exceeded, don't count anymore
-            if sumWeight > weightLimit:
-                break
-            count += 1
-        for order in ordersToDispatch:
-            hospital = utils.getSupplyingHospital(order)
-            ityHospitals.append(hospital)
-            break
-        vertices = list()
-        for x in ityHospitals:
-            if x not in vertices:
-                vertices.append(x)
-        utils.generateItinerary(vertices)
-    return render(request, 'asp/dispatch.html', {'orders' : ordersToDispatch[:count], 'count': count})
+    # when simply accessing this route
+    else:
+        weightLimit = 23.8
+        count = 0
+        sumWeight = 0.0
+        '''
+        ityHospitals list containes all the hospitals to which the supplies are delivered
+        the last element is the hospital that is dispatching all the ordered items
+        '''
+        ityHospitals = []
+        if len(ordersToDispatch) >= 1:
+            for order in ordersToDispatch:
+                # For checking how many orders to group together
+                sumWeight += order.getTotalWeight()
+                # For finding the corresponding clinic of the order
+                ityHospitals.append(UserExt.objects.get(id = order.requester.id).hospital)
+                # Weight limit exceeded, don't count anymore
+                if sumWeight > weightLimit:
+                    break
+                count += 1
+
+            supply_hospital = utils.getSupplyingHospital(order)
+            # put the supply_hospital at the end of the list
+            ityHospitals.append(supply_hospital)
+            vertices = list()
+            for x in ityHospitals:
+                if x not in vertices:
+                    vertices.append(x)
+            itinerary = utils.generateItinerary(vertices)
+            path_to_file = utils.generateCSV(itinerary)
+        return render(request, 'asp/dispatch.html', {'orders' : ordersToDispatch[:count], 'count': count})

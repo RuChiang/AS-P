@@ -11,15 +11,16 @@
 </ul>
 
 {% if count > 0 %}
-    {% comment %} <form action="" method="get">
-        {% csrf_token %}
-        <input type="hidden" name="download" value="1">
-        <input type="submit" value="Download CSV">
-    </form> {% endcomment %}
-    <form action="/asp/viewDispatch" method="post">
-        {% csrf_token %}
-        <input type="hidden" name="count" value="{{ count }}">
-        <input type="submit" value="Dispatch">
-    </form>
+
+        <form action="/asp/downloadItinerary" method="get">
+            {% csrf_token %}
+            <input type="hidden" name="download" value="1">
+            <input type="submit" value="Download CSV">
+        </form>
+        <form action="/asp/viewDispatch" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="count" value="{{ count }}">
+            <input type="submit" value="Dispatch">
+        </form>
 {% endif %}
 {% endblock %}

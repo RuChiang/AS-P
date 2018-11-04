@@ -41,19 +41,17 @@ def transform_priority_to_integer(priority):
 #     return sumWeight
 
 def generateCSV(content):
-    csvData = [['Person', 'Age'], ['Peter', '22'], ['Jasmine', '21'], ['Sam', '24']]
-
-    with open('asp/static/asp/itinerary.csv', 'w') as csvFile:
+    path_to_file = 'asp/static/asp/itinerary.csv'
+    with open(path_to_file, 'w') as csvFile:
         writer = csv.writer(csvFile)
-        writer.writerows(csvData)
-
+        writer.writerows(content)
     csvFile.close()
+    return path_to_file
 
-def getSupplyingHospital(orderID):
-    items = Ordered_Item.objects.filter(order = orderID.id)
-    for item in items:
-        newItem = Available_Item.objects.get(item_abstract = item.item_id)
-        return newItem.supplying_hospital
+# get the supplying_hospital of the hospital where the requester work at
+# relationship: supplying_hospital deliver the order to the hospital of the requester
+def getSupplyingHospital(order):
+    return order.requester.supplying_hospital
 
 def shortest_route(graph, initial, num):
     # shortest paths is a dict of nodes
@@ -98,4 +96,11 @@ def generateItinerary(listOfHospitals):
     for i in order:
         ityData.append(Hospital.objects.get(name = i))
     print(ityData)
-    # generateCSV(ityData)
+    '''
+    format the output
+    '''
+    itinerary_string = []
+    itinerary_string.append(["Name", "latitude", "longtitude"])
+    for hospital_object in ityData:
+        itinerary_string.append([hospital_object.name, hospital_object.latitude, hospital_object.longtitude, hospital_object.altitude])
+    return itinerary_string
