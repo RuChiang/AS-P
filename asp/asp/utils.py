@@ -51,7 +51,7 @@ def generateCSV(content):
 # get the supplying_hospital of the hospital where the requester work at
 # relationship: supplying_hospital deliver the order to the hospital of the requester
 def getSupplyingHospital(order):
-    return order.requester.supplying_hospital
+    return order.requester.hospital.supplying_hospital
 
 def shortest_route(graph, initial, num):
     # shortest paths is a dict of nodes
@@ -100,7 +100,7 @@ def generateItinerary(listOfHospitals):
     format the output
     '''
     itinerary_string = []
-    itinerary_string.append(["Name", "latitude", "longtitude"])
+    itinerary_string.append(["Name", "latitude", "longtitude","altitude"])
     for hospital_object in ityData:
         itinerary_string.append([hospital_object.name, hospital_object.latitude, hospital_object.longtitude, hospital_object.altitude])
     return itinerary_string
