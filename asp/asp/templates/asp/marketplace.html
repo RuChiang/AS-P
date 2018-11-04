@@ -20,6 +20,12 @@
                         <label for={{item.name}}> {{ item.name }}  - </label>
                         <input id={{item.name}} type="number" name={{item.name}} value="0">
                         <br>
+                        <div>
+                            {% if item.image %}
+                            <img src={{item.image.url}} height="200" />
+                            {% endif %}
+                        </div>
+                        <br>
                         <span>Description - {{item.description}}</span>
                         <br>
                         <span>Shipping Wieght - {{item.weight}}</span>

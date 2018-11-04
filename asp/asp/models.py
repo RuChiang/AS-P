@@ -60,7 +60,7 @@ class Item(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     description = models.CharField(max_length = 200)
     weight = models.FloatField(default = 0)
-    # image = models.ImageField(null = True)
+    image = models.ImageField(upload_to = '',max_length = 100, null = True, blank = True)
 
     def __str__(self):
         return f"Category: {self.category.name} | Name: {self.name}"

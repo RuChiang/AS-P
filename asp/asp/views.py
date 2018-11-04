@@ -54,7 +54,7 @@ def loginView(request):
 def signupView(request):
     #  if it is post, it means user is signing up
     if request.method == 'POST':
-        form = SignupForm(request.POST)
+        form = SignupForm(request.POST or None, request.FILES or None)
         if form.is_valid():
             # try to create a user here
             username = form.cleaned_data['username']
@@ -65,7 +65,6 @@ def signupView(request):
             userExt = UserExt(
                 user = user,
                 hospital = Hospital.objects.get(name = form.cleaned_data['hospital']),
-                supplying_hospital = Hospital.objects.get(name = form.cleaned_data['supplying_hospital']),
                 role = form.cleaned_data['role']
             )
             userExt.save()
