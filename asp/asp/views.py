@@ -57,6 +57,7 @@ def signupView(request):
             userExt = UserExt(
                 user = user,
                 hospital = Hospital.objects.get(name = form.cleaned_data['hospital']),
+                supplying_hospital = Hospital.objects.get(name = form.cleaned_data['supplying_hospital']),
                 role = form.cleaned_data['role']
             )
             userExt.save()

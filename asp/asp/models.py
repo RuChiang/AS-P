@@ -37,8 +37,8 @@ class UserExt(models.Model):
     )
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
-    # supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE)
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'working_hospital')
+    supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'supplying_hospital')
     role = models.CharField(
         max_length = 2,
         choices = ROLES,

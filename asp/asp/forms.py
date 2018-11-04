@@ -24,6 +24,8 @@ class SignupForm(forms.Form):
     password = forms.CharField(label='password', max_length = 50)
     email = forms.EmailField(max_length = 254)
     hospital = forms.ChoiceField(choices=getHospitalNames())
+    supplying_hospital = forms.ChoiceField(choices=getHospitalNames())
+
     role = forms.ChoiceField(choices = ROLES)
 
 class LoginForm(forms.Form):

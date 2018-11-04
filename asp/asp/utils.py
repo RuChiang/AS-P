@@ -16,7 +16,7 @@ class Graph:
 
 def arrange_items_by_category(logged_in_user):
     items_stored_by_category = {}
-    items = Available_Item.objects.filter(supplying_hospital = UserExt.objects.get(user = logged_in_user).hospital)
+    items = Available_Item.objects.filter(supplying_hospital = UserExt.objects.get(user = logged_in_user).supplying_hospital)
     for item in items:
         if item.item_abstract.category.name not in items_stored_by_category:
             items_stored_by_category[item.item_abstract.category.name] = []
@@ -73,7 +73,7 @@ def shortest_route(graph, initial, num):
                     next_node = clinic
                     distance = graph.weights[(current_node, clinic)]
         path.append(next_node)
-        
+
         current_node = next_node
         count += 1
     path.append(initial.name)
