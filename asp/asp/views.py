@@ -111,7 +111,7 @@ def marketPlace(request):
 
         for orders_item in orders_items:
             orders_item_abstract = Item.objects.get(name = str(orders_item))
-            orders_item_supplying_hospital = UserExt.objects.get(user = request.user).hospital
+            orders_item_supplying_hospital = UserExt.objects.get(user = request.user).supplying_hospital
             if not Available_Item.objects.get(item_abstract = orders_item_abstract,
                 supplying_hospital = orders_item_supplying_hospital
                 ).is_enough(orders_items[orders_item]):
@@ -129,7 +129,7 @@ def marketPlace(request):
         # create an ordered_item, and subtract the quantity of the available supplies
         for orders_item in orders_items:
             if orders_items[orders_item] != 0:
-                item_in_db = Available_Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).hospital, item_abstract = Item.objects.get(name = str(orders_item)))
+                item_in_db = Available_Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).supplying_hospital, item_abstract = Item.objects.get(name = str(orders_item)))
                 item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
                 item_in_db.save()
                 new_ordered_item = Ordered_Item(item = Item.objects.get(name = str(orders_item)), quantity = orders_items[orders_item], order = Order_model)
@@ -140,7 +140,7 @@ def marketPlace(request):
         # are there other ways to simplify this logic?
 
 
-        msg = "order successfully placed"
+        msg = f"order successfully placed. Order id is, {Order_model.id}"
         return render(request, 'asp/marketplace.html', {'success':msg, 'item_list':items })
 
 

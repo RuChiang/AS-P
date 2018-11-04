@@ -128,10 +128,10 @@ class Order(models.Model):
     )
     # All important time stamps for Health Authority
     time_queued_processing = models.DateTimeField()
-    time_processing = models.DateTimeField(null = True)
-    time_queued_dispatch = models.DateTimeField(null = True)
-    time_dispatched = models.DateTimeField(null = True)
-    time_delivered = models.DateTimeField(null = True)
+    time_processing = models.DateTimeField(null = True, blank = True)
+    time_queued_dispatch = models.DateTimeField(null = True, blank = True)
+    time_dispatched = models.DateTimeField(null = True, blank = True)
+    time_delivered = models.DateTimeField(null = True, blank = True)
 
     def getTotalWeight(self):
         sumWeight = 0.0
