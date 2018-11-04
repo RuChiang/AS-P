@@ -15,6 +15,7 @@ class Hospital(models.Model):
     latitude = models.FloatField()
     longtitude = models.FloatField()
     altitude = models.FloatField()
+    supplying_hospital = models.ForeignKey('self', on_delete=models.CASCADE, related_name = 'Hospital_supplying_hospital', null=True, blank=True)
     role = models.CharField(
         max_length = 2,
         choices = ROLES,
@@ -38,7 +39,6 @@ class UserExt(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'working_hospital')
-    supplying_hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'supplying_hospital')
     role = models.CharField(
         max_length = 2,
         choices = ROLES,

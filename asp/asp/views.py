@@ -96,13 +96,9 @@ def UserViewSelf(request):
     # print(items)
     return render(request, 'asp/user_show_self.html', {'item_list':items})
 
-# def marketPlace(request):
-#     # items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
-#     items = utils.arrange_items_by_category(request.user)
-#     return render(request, 'asp/marketplace.html', {'item_list':items})
+
 def marketPlace(request):
     weight_limit = 23.8
-    # items = Item.objects.filter(supplying_hospital = UserExt.objects.filter(user = request.user)[0].hospital)
     items = utils.arrange_items_by_category(request.user)
     orders_items = {}
     if request.method == 'GET':
@@ -119,7 +115,7 @@ def marketPlace(request):
 
         for orders_item in orders_items:
             orders_item_abstract = Item.objects.get(name = str(orders_item))
-            orders_item_supplying_hospital = UserExt.objects.get(user = request.user).supplying_hospital
+            orders_item_supplying_hospital = UserExt.objects.get(user = request.user).hospital.supplying_hospital
             if not Available_Item.objects.get(item_abstract = orders_item_abstract,
                 supplying_hospital = orders_item_supplying_hospital
                 ).is_enough(orders_items[orders_item]):
@@ -137,7 +133,7 @@ def marketPlace(request):
         # create an ordered_item, and subtract the quantity of the available supplies
         for orders_item in orders_items:
             if orders_items[orders_item] != 0:
-                item_in_db = Available_Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).supplying_hospital, item_abstract = Item.objects.get(name = str(orders_item)))
+                item_in_db = Available_Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).hospital.supplying_hospital, item_abstract = Item.objects.get(name = str(orders_item)))
                 item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
                 item_in_db.save()
                 new_ordered_item = Ordered_Item(item = Item.objects.get(name = str(orders_item)), quantity = orders_items[orders_item], order = Order_model)

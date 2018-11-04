@@ -1,12 +1,12 @@
 from django import forms
-from asp.models import Hospital
-
-def getHospitalNames():
-    hospitals = Hospital.objects.all()
-    NAMES = []
-    for hospital in hospitals:
-        NAMES.append((hospital.name, hospital.name))
-    return tuple(NAMES)
+# from asp.models import Hospital
+#
+# def getHospitalNames():
+#     hospitals = Hospital.objects.all()
+#     NAMES = []
+#     for hospital in hospitals:
+#         NAMES.append((hospital.name, hospital.name))
+#     return tuple(NAMES)
 
 class SignupForm(forms.Form):
     CLINIC_MANAGER = 'CM'
@@ -23,9 +23,8 @@ class SignupForm(forms.Form):
     username = forms.CharField(label='name', max_length = 50)
     password = forms.CharField(label='password', max_length = 50)
     email = forms.EmailField(max_length = 254)
-    hospital = forms.ChoiceField(choices=getHospitalNames())
-    supplying_hospital = forms.ChoiceField(choices=getHospitalNames())
-
+    hospital = forms.CharField(label='name', max_length = 50)
+    supplying_hospital = forms.CharField(label='name', max_length = 50)
     role = forms.ChoiceField(choices = ROLES)
 
 class LoginForm(forms.Form):
