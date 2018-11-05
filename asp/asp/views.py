@@ -187,7 +187,9 @@ def viewDispatch(request):
                     break
                 count += 1
 
-            supply_hospital = utils.getSupplyingHospital(order)
+            # weird assumption: getting the supplying_hospital from anyone(the first in this case)
+            # of the orders cuz it's the same for all of the orders
+            supply_hospital = utils.getSupplyingHospital(ordersToDispatch[0])
             # put the supply_hospital at the end of the list
             ityHospitals.append(supply_hospital)
             vertices = list()
