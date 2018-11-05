@@ -194,6 +194,6 @@ def viewDispatch(request):
             for x in ityHospitals:
                 if x not in vertices:
                     vertices.append(x)
-            itinerary = utils.generateItinerary(vertices)
+            itinerary = utils.generateItinerary(vertices, ordersToDispatch)
             path_to_file = utils.generateCSV(itinerary)
         return render(request, 'asp/dispatch.html', {'orders' : ordersToDispatch[:count], 'count': count})

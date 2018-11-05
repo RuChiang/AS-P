@@ -1,18 +1,8 @@
-from asp.models import Category, Item, UserExt, Ordered_Item, Available_Item, Distance, Hospital
+from asp.models import Category, Item, UserExt, Ordered_Item, Available_Item, Distance, Hospital, Order
 import csv
-from collections import defaultdict
+import itertools
 
-class Graph:
-    def __init__(self):
-        self.edges = defaultdict(list)
-        self.weights = {}
 
-    def add_edge(self, from_node, to_node, weight):
-        # Note: assumes edges are bi-directional
-        self.edges[from_node].append(to_node)
-        self.edges[to_node].append(from_node)
-        self.weights[(from_node, to_node)] = weight
-        self.weights[(to_node, from_node)] = weight
 
 def arrange_items_by_category(logged_in_user):
     items_stored_by_category = {}
@@ -53,31 +43,39 @@ def generateCSV(content):
 def getSupplyingHospital(order):
     return order.requester.hospital.supplying_hospital
 
-def shortest_route(graph, initial, num):
-    # shortest paths is a dict of nodes
-    # whose value is a tuple of (previous node, weight)
-    shortest_paths = {initial: (None, 0)}
-    count = 1
-    current_node = initial.name
-    visited = set()
-    path = []
-    while count != num:
-        visited.add(current_node)
-        destinations = graph.edges[current_node]
-        distance = 10000000000
-        for clinic in destinations:
-            if clinic not in visited:
-                if graph.weights[(current_node, clinic)] < distance:
-                    next_node = clinic
-                    distance = graph.weights[(current_node, clinic)]
-        path.append(next_node)
+class Graph:
+    def __init__(self):
+        self.edges = {}
 
-        current_node = next_node
-        count += 1
-    path.append(initial.name)
-    return path
+    def add_edge(self, from_node, to_node, weight):
+        # Note: assumes edges are bi-directional
+        # check if the key exists
+        if from_node not in self.edges.keys():
+            self.edges[from_node] = {}
+        if to_node not in self.edges.keys():
+            self.edges[to_node] = {}
+        self.edges[from_node][to_node] = weight
+        self.edges[to_node][from_node] = weight
 
-def generateItinerary(listOfHospitals):
+    def shortest_route(self, startpoint):
+        # shortest paths is a dict of nodes
+        # whose value is a tuple of (previous node, weight)
+        hospitals_to_permute =list(self.edges.keys())
+        hospitals_to_permute.remove(startpoint)
+        routes = []
+        for route in itertools.permutations(hospitals_to_permute, len(self.edges)-1):
+            route_length = self.edges[startpoint][route[0]] + sum(self.edges[i][j] for i, j in zip(route[:-1], route[1:])) \
+                            + self.edges[route[-1]][startpoint]
+
+            routes.append((route, route_length))
+        min_value = min(routes, key=lambda x:x[1])[1]
+        routes = sorted(routes, key = lambda x:x[1])
+        min_routes = list(filter( lambda x:x[1] == min_value, routes))
+        
+        return min_routes
+
+
+def generateItinerary(listOfHospitals, ordersToDispatch):
     '''
     dispatched_order_hospitals will be a list containing the Hospital name(a string)
 
@@ -87,15 +85,32 @@ def generateItinerary(listOfHospitals):
     edges = list()
     for i in range(0, len(listOfHospitals)):
         for j in range(i+1, len(listOfHospitals)):
-            d = Distance.objects.filter(hospital_a = listOfHospitals[i]).get(hospital_b= listOfHospitals[j])
-            edges.append((d.hospital_a.name, d.hospital_b.name, d.distance))
+            # need to check both directions. the order might be flipped
+            d = Distance.objects.filter(hospital_a = listOfHospitals[i], hospital_b= listOfHospitals[j])
+            if len(d) == 0:
+                d = Distance.objects.filter(hospital_a = listOfHospitals[j], hospital_b= listOfHospitals[i])
+
+            edges.append((d[0].hospital_a.name, d[0].hospital_b.name, d[0].distance))
     for edge in edges:
         graph.add_edge(*edge)
-    order = shortest_route(graph, listOfHospitals[len(listOfHospitals)-1], len(listOfHospitals))
-    ityData = list()
-    for i in order:
-        ityData.append(Hospital.objects.get(name = i))
-    print(ityData)
+    routes = graph.shortest_route(str(listOfHospitals[-1].name))
+    '''
+    see the priority of the orders that points to the first hospital in the route
+    '''
+    list_of_priorities = [0] * len(routes)
+    for index, route in enumerate(routes):
+        hospital_name = route[0][0]
+        for order in ordersToDispatch:
+            hospital = Order.objects.get(id = order.id).requester.hospital.name
+            if hospital == hospital_name:
+                if list_of_priorities[index] < order.priority:
+                    list_of_priorities[index] = order.priority
+    max_index = list_of_priorities.index(max(list_of_priorities))
+
+    ityData = []
+    for hospital_stop in routes[max_index][0]:
+        ityData.append(Hospital.objects.get(name = hospital_stop))
+    print(f"this is the ityData: \n {ityData}")
     '''
     format the output
     '''
