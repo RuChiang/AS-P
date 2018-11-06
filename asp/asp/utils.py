@@ -121,7 +121,7 @@ def generateItinerary(listOfHospitals, ordersToDispatch):
     format the output
     '''
     itinerary_string = []
-    itinerary_string.append(["Location Name", "Latitude", "Longtitude","Altitude"])
+    # itinerary_string.append(["Location Name", "Latitude", "Longtitude","Altitude"])
     for hospital_object in ityData:
-        itinerary_string.append([hospital_object.name, hospital_object.latitude, hospital_object.longtitude, hospital_object.altitude])
+        itinerary_string.append([hospital_object.latitude, hospital_object.longtitude, hospital_object.altitude])
     return itinerary_string
