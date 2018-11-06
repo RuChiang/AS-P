@@ -17,12 +17,12 @@
              <ol>
                  {% for item in items %}
                     <li>
-                        <label for={{item.name}}> {{ item.name }}  - </label>
-                        <input id={{item.name}} type="number" name={{item.name}} value="0">
+                        <label for="{{ item.name }}"> {{ item.name }}  - </label>
+                        <input id="{{ item.name }}" type="number" name="{{ item.name }}" value="0">
                         <br>
                         <div>
                             {% if item.image %}
-                            <img src={{item.image.url}} height="100" />
+                            <img src="{{item.image.url}}" height="100" />
                             {% endif %}
                         </div>
                         <br>
