@@ -97,7 +97,6 @@ def UserViewSelf(request):
 
 
 def marketPlace(request):
-    weight_limit = 23.8
     items = utils.arrange_items_by_category(request.user)
     orders_items = {}
     if request.method == 'GET':
@@ -113,6 +112,7 @@ def marketPlace(request):
                 req_priority = utils.transform_priority_to_integer(request.GET[item])
 
         for orders_item in orders_items:
+            # print(orders_item)
             orders_item_abstract = Item.objects.get(name = str(orders_item))
             orders_item_supplying_hospital = UserExt.objects.get(user = request.user).hospital.supplying_hospital
             if not Available_Item.objects.get(item_abstract = orders_item_abstract,
@@ -152,50 +152,38 @@ def marketPlace(request):
 
 def viewDispatch(request):
     ordersToDispatch = Order.objects.filter(status = 'QFD').order_by('-priority', 'time_queued_processing')
-    # Only happens after one group was already dispatched
-    if request.method == 'POST':
-        count = int(request.POST.get("count"))
-        i = 0
-        # Change to dispatched
-        for order in ordersToDispatch:
-            order.status = 'DSD'
-            order.time_dispatched = timezone.now()
-            order.save()
-            i+=1
-            if i == count:
-                break
-        # Refresh to not have a POST method in request
-        return redirect('/asp/viewDispatch')
-    # when simply accessing this route
-    else:
-        weightLimit = 23.8
-        count = 0
-        sumWeight = 0.0
-        '''
-        ityHospitals list containes all the hospitals to which the supplies are delivered
-        the last element is the hospital that is dispatching all the ordered items
-        '''
-        ityHospitals = []
-        if len(ordersToDispatch) >= 1:
-            for order in ordersToDispatch:
-                # For checking how many orders to group together
-                sumWeight += order.getTotalWeight()
-                # For finding the corresponding clinic of the order
-                ityHospitals.append(UserExt.objects.get(id = order.requester.id).hospital)
-                # Weight limit exceeded, don't count anymore
-                if sumWeight > weightLimit:
-                    break
-                count += 1
+    destination_hospitals = []
+    orders_to_dispatch_in_this_go = []
+    if len(ordersToDispatch) > 0:
+        weight_limit = 25
+        sum_weight = 0.0
 
-            # weird assumption: getting the supplying_hospital from anyone(the first in this case)
-            # of the orders cuz it's the same for all of the orders
-            supply_hospital = utils.getSupplyingHospital(ordersToDispatch[0])
-            # put the supply_hospital at the end of the list
-            ityHospitals.append(supply_hospital)
-            vertices = list()
-            for x in ityHospitals:
-                if x not in vertices:
-                    vertices.append(x)
-            itinerary = utils.generateItinerary(vertices, ordersToDispatch)
-            path_to_file = utils.generateCSV(itinerary)
-        return render(request, 'asp/dispatch.html', {'orders' : ordersToDispatch[:count], 'count': count})
+        for count, order in enumerate(ordersToDispatch):
+            # 1.2 being the weight of the container
+            sum_weight += order.getTotalWeight() + 1.2
+            if sum_weight > weight_limit:
+                break
+            destination_hospitals.append(UserExt.objects.get(id = order.requester.id).hospital)
+            orders_to_dispatch_in_this_go.append(order)
+
+        # weird assumption: getting the supplying_hospital from anyone(the first in this case)
+        # of the orders cuz it's the same for all of the orders
+        destination_hospitals.append(Hospital.objects.get(name = utils.getSupplyingHospital(ordersToDispatch[0])))
+
+        #check if the user click dispatch
+        if request.method == 'POST':
+            for order in orders_to_dispatch_in_this_go:
+                order.status = 'DSD'
+                order.time_dispatched = timezone.now()
+                order.save()
+            return redirect('/asp/viewDispatch')
+
+        vertices = list()
+        for x in destination_hospitals:
+            if x not in vertices:
+                vertices.append(x)
+        print(vertices)
+        itinerary = utils.generateItinerary(vertices, orders_to_dispatch_in_this_go)
+        path_to_file = utils.generateCSV(itinerary)
+
+    return render(request, 'asp/dispatch.html', {'orders' : [ order for order in orders_to_dispatch_in_this_go if len(orders_to_dispatch_in_this_go) > 0 ]})

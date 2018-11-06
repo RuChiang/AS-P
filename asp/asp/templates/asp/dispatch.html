@@ -1,7 +1,7 @@
 {% extends "asp/header.html" %}
 {% block content %}
-<h1>This is dispatch site</h1>
-<h4>You can download the itinerary and dispatch the drone here</h4>
+<h1>Dispatch Site</h1>
+<h4>Here you can see all the orders that will be dispatched in this batch</h4>
 <ul>
     {% for order in orders %}
         <li>
@@ -10,7 +10,7 @@
     {% endfor %}
 </ul>
 
-{% if count > 0 %}
+{% if orders|length  > 0 %}
 
         <form action="/asp/downloadItinerary" method="get">
             {% csrf_token %}
@@ -19,7 +19,6 @@
         </form>
         <form action="/asp/viewDispatch" method="post">
             {% csrf_token %}
-            <input type="hidden" name="count" value="{{ count }}">
             <input type="submit" value="Dispatch">
         </form>
 {% endif %}
