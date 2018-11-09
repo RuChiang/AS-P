@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.views.generic.list import ListView
 from asp.models import Item, Order, Ordered_Item, UserExt, Hospital, Available_Item
 from django.http import HttpResponse
+from django.contrib.auth.models import Permission
 from django.utils import timezone
 from asp.forms import SignupForm, LoginForm
 from django.contrib.auth import authenticate, login, logout
@@ -12,6 +13,17 @@ import os
 
 # Create your views here.
 
+def viewWarehouse(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
+    if UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
+        '''
+        CODE HERE FOR VIEWING AND OPERATING ON THE ITEMS IN WAREHOUSE
+        '''
+        pass
+    else:
+        return HttpResponse('No Permission', status = 403)
+
 def downloadItinerary(request):
     file = open('asp/static/asp/itinerary.csv', 'rb')
     response = HttpResponse(content=file,content_type='text/csv')
@@ -20,8 +32,11 @@ def downloadItinerary(request):
 
 
 def logoutView(request):
-    logout(request)
-    return HttpResponse("logged out!!")
+    if request.user.is_authenticated:
+        logout(request)
+        return HttpResponse("logged out!!")
+    else:
+        return HttpResponse("You are not even logged in")
 
 def loginView(request):
     #  if it is post, it means user is logging in
@@ -61,25 +76,138 @@ def signupView(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             user = User.objects.create_user(username, email, password)
+            user.first_name = form.cleaned_data['first_name']
+            user.last_name = form.cleaned_data['last_name']
             user.save()
-            userExt = UserExt(
+            profile = UserExt(
                 user = user,
                 hospital = Hospital.objects.get(name = form.cleaned_data['hospital']),
                 role = form.cleaned_data['role']
             )
-            userExt.save()
+            profile.save()
             login(request, user)
             return HttpResponse("signed up successfully. The system has logged you in as well")
         else:
             return HttpResponse("wrong" + str(form.errors))
     #  a get method means the user want the form
     elif request.method == 'GET':
+        '''
+        CODE TO WRITE HERE
+        the only scenario that we will present the users the signup page is when they click the token contained in the email'
+        and their page redirects here. Get the token and decrypt it. The system should be able to retirve the email of the user
+        and also the assigned role
+        Assumption: every user is expected to be working at Queen's Mary except the clinic managers
+        '''
         form = SignupForm()
         return render(request, 'asp/signup.html', {'form':form})
     # # dunno which HTTP method its using
     else:
         return HttpResponse("how did you even got here?")
 
+def marketPlace(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
+    if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
+
+        items = utils.arrange_items_by_category(request.user)
+        orders_items = {}
+        if request.method == 'GET':
+            # see if this is simply routing
+            if len(request.GET) == 0:
+                return render(request, 'asp/marketplace.html', {'item_list':items })
+            # extract the order details into the order dict
+            req_priority = 1
+            for item in request.GET:
+                if item != 'priority':
+                    orders_items[str(item)] = int(request.GET[item])
+                else:
+                    req_priority = utils.transform_priority_to_integer(request.GET[item])
+
+            for orders_item in orders_items:
+                # print(orders_item)
+                orders_item_abstract = Item.objects.get(name = str(orders_item))
+                orders_item_supplying_hospital = UserExt.objects.get(user = request.user).hospital.supplying_hospital
+                if not Available_Item.objects.get(item_abstract = orders_item_abstract,
+                    supplying_hospital = orders_item_supplying_hospital
+                    ).is_enough(orders_items[orders_item]):
+                    msg = "no enough stock in " + str(orders_item) + " please place your order again"
+                    return render(request, 'asp/marketplace.html', {'err':msg, 'item_list':items })
+            # no order placed and click placeOrder
+            all_zero_order =  True if all(v == 0 for v in orders_items.values()) else False
+            if all_zero_order:
+                msg = "Please input values for those supplies which you would like to order"
+                return render(request, 'asp/marketplace.html', {'warning':msg, 'item_list':items })
+
+            Order_model = Order(status='QFP', requester = UserExt.objects.get(user = request.user) , time_queued_processing=timezone.now(), priority=req_priority)
+            Order_model.save()
+
+            # create an ordered_item, and subtract the quantity of the available supplies
+            for orders_item in orders_items:
+                if orders_items[orders_item] != 0:
+                    item_in_db = Available_Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).hospital.supplying_hospital, item_abstract = Item.objects.get(name = str(orders_item)))
+                    item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
+                    item_in_db.save()
+                    new_ordered_item = Ordered_Item(item = Item.objects.get(name = str(orders_item)), quantity = orders_items[orders_item], order = Order_model)
+                    new_ordered_item.save()
+
+            # think about how to relate to the requester
+            # add a field for the priority
+            # are there other ways to simplify this logic?
+
+
+            msg = f"order successfully placed. Order id is, {Order_model.id}"
+            return render(request, 'asp/marketplace.html', {'success':msg, 'item_list':items })
+
+        else:
+            return HttpResponse("requested with invalid method")
+    else:
+        return HttpResponse('No Permission', status = 403)
+
+def viewDispatch(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
+    if UserExt.objects.get(user = request.user).is_permitted_to_access('DP'):
+        ordersToDispatch = Order.objects.filter(status = 'QFD').order_by('-priority', 'time_queued_processing')
+        destination_hospitals = []
+        orders_to_dispatch_in_this_go = []
+        if len(ordersToDispatch) > 0:
+            weight_limit = 25
+            sum_weight = 0.0
+
+            for count, order in enumerate(ordersToDispatch):
+                # 1.2 being the weight of the container
+                sum_weight += order.getTotalWeight() + 1.2
+                if sum_weight > weight_limit:
+                    break
+                destination_hospitals.append(UserExt.objects.get(id = order.requester.id).hospital)
+                orders_to_dispatch_in_this_go.append(order)
+
+            # weird assumption: getting the supplying_hospital from anyone(the first in this case)
+            # of the orders cuz it's the same for all of the orders
+            destination_hospitals.append(Hospital.objects.get(name = utils.getSupplyingHospital(ordersToDispatch[0])))
+
+            #check if the user click dispatch
+            if request.method == 'POST':
+                for order in orders_to_dispatch_in_this_go:
+                    order.status = 'DSD'
+                    order.time_dispatched = timezone.now()
+                    order.save()
+                return redirect('/asp/viewDispatch')
+
+            vertices = list()
+            for x in destination_hospitals:
+                if x not in vertices:
+                    vertices.append(x)
+            print(vertices)
+            itinerary = utils.generateItinerary(vertices, orders_to_dispatch_in_this_go)
+            path_to_file = utils.generateCSV(itinerary)
+
+        return render(request, 'asp/dispatch.html', {'orders' : [ order for order in orders_to_dispatch_in_this_go if len(orders_to_dispatch_in_this_go) > 0 ]})
+    else:
+        return HttpResponse('No Permission', status = 403)
+
+''' functions below are for debug uses '''
+###########################################################
 
 class ItemsViewAll(ListView):
     model = Available_Item
@@ -94,96 +222,3 @@ def UserViewSelf(request):
     items.append(userext.role)
     # print(items)
     return render(request, 'asp/user_show_self.html', {'item_list':items})
-
-
-def marketPlace(request):
-    items = utils.arrange_items_by_category(request.user)
-    orders_items = {}
-    if request.method == 'GET':
-        # see if this is simply routing
-        if len(request.GET) == 0:
-            return render(request, 'asp/marketplace.html', {'item_list':items })
-        # extract the order details into the order dict
-        req_priority = 1
-        for item in request.GET:
-            if item != 'priority':
-                orders_items[str(item)] = int(request.GET[item])
-            else:
-                req_priority = utils.transform_priority_to_integer(request.GET[item])
-
-        for orders_item in orders_items:
-            # print(orders_item)
-            orders_item_abstract = Item.objects.get(name = str(orders_item))
-            orders_item_supplying_hospital = UserExt.objects.get(user = request.user).hospital.supplying_hospital
-            if not Available_Item.objects.get(item_abstract = orders_item_abstract,
-                supplying_hospital = orders_item_supplying_hospital
-                ).is_enough(orders_items[orders_item]):
-                msg = "no enough stock in " + str(orders_item) + " please place your order again"
-                return render(request, 'asp/marketplace.html', {'err':msg, 'item_list':items })
-        # no order placed and click placeOrder
-        all_zero_order =  True if all(v == 0 for v in orders_items.values()) else False
-        if all_zero_order:
-            msg = "Please input values for those supplies which you would like to order"
-            return render(request, 'asp/marketplace.html', {'warning':msg, 'item_list':items })
-
-        Order_model = Order(status='QFP', requester = UserExt.objects.get(user = request.user) , time_queued_processing=timezone.now(), priority=req_priority)
-        Order_model.save()
-
-        # create an ordered_item, and subtract the quantity of the available supplies
-        for orders_item in orders_items:
-            if orders_items[orders_item] != 0:
-                item_in_db = Available_Item.objects.get(supplying_hospital = UserExt.objects.get(user = request.user).hospital.supplying_hospital, item_abstract = Item.objects.get(name = str(orders_item)))
-                item_in_db.quantity = item_in_db.quantity - orders_items[orders_item]
-                item_in_db.save()
-                new_ordered_item = Ordered_Item(item = Item.objects.get(name = str(orders_item)), quantity = orders_items[orders_item], order = Order_model)
-                new_ordered_item.save()
-
-        # think about how to relate to the requester
-        # add a field for the priority
-        # are there other ways to simplify this logic?
-
-
-        msg = f"order successfully placed. Order id is, {Order_model.id}"
-        return render(request, 'asp/marketplace.html', {'success':msg, 'item_list':items })
-
-
-    else:
-        return HttpResponse("requested with invalid method")
-
-def viewDispatch(request):
-    ordersToDispatch = Order.objects.filter(status = 'QFD').order_by('-priority', 'time_queued_processing')
-    destination_hospitals = []
-    orders_to_dispatch_in_this_go = []
-    if len(ordersToDispatch) > 0:
-        weight_limit = 25
-        sum_weight = 0.0
-
-        for count, order in enumerate(ordersToDispatch):
-            # 1.2 being the weight of the container
-            sum_weight += order.getTotalWeight() + 1.2
-            if sum_weight > weight_limit:
-                break
-            destination_hospitals.append(UserExt.objects.get(id = order.requester.id).hospital)
-            orders_to_dispatch_in_this_go.append(order)
-
-        # weird assumption: getting the supplying_hospital from anyone(the first in this case)
-        # of the orders cuz it's the same for all of the orders
-        destination_hospitals.append(Hospital.objects.get(name = utils.getSupplyingHospital(ordersToDispatch[0])))
-
-        #check if the user click dispatch
-        if request.method == 'POST':
-            for order in orders_to_dispatch_in_this_go:
-                order.status = 'DSD'
-                order.time_dispatched = timezone.now()
-                order.save()
-            return redirect('/asp/viewDispatch')
-
-        vertices = list()
-        for x in destination_hospitals:
-            if x not in vertices:
-                vertices.append(x)
-        print(vertices)
-        itinerary = utils.generateItinerary(vertices, orders_to_dispatch_in_this_go)
-        path_to_file = utils.generateCSV(itinerary)
-
-    return render(request, 'asp/dispatch.html', {'orders' : [ order for order in orders_to_dispatch_in_this_go if len(orders_to_dispatch_in_this_go) > 0 ]})

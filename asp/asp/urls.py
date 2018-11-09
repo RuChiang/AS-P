@@ -14,6 +14,7 @@ urlpatterns = [
     path('logout', views.logoutView, name='logout'),
     path('viewDispatch', views.viewDispatch, name='viewDispatch'),
     path('downloadItinerary', views.downloadItinerary, name='downloadItinerary'),
+    path('viewWarehouse', views.viewWarehouse, name='viewWarehouse'),
 
 ]
 

@@ -45,8 +45,32 @@ class UserExt(models.Model):
         default = CLINIC_MANAGER
     )
 
+
+    def is_permitted_to_access(self, role):
+        if self.role != role:
+            return False
+        return True
+
     def __str__(self):
         return f"{self.user.username}: {self.role}"
+
+# class ClinicManager(UserExt):
+#     class Meta:
+#         permissions = (
+#             ("can_view_items_and_order", "Can view items and place orders"),
+#         )
+#
+# class WarehousePeronnel(UserExt):
+#     class Meta:
+#         permissions = (
+#             ("can_operate_on_wareshouse_orders", "Can operate items to be processed in the Warehouse"),
+#         )
+#
+# class Dispatcher(UserExt):
+#     class Meta:
+#         permissions = (
+#             ("can_operate_on_dispatch_queue", "Can operate on the dispatch queue"),
+#         )
 
 class Category(models.Model):
     name = models.CharField(max_length = 200)

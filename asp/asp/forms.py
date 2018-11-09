@@ -20,11 +20,17 @@ class SignupForm(forms.Form):
         (ADMIN, 'Admin')
     )
 
-    username = forms.CharField(label='name', max_length = 50)
+    first_name = forms.CharField(label='firstname', max_length = 50)
+    last_name = forms.CharField(label='lastname', max_length = 50)
+    username = forms.CharField(label='username', max_length = 50)
     password = forms.CharField(label='password', max_length = 50)
-    email = forms.EmailField(max_length = 254)
     hospital = forms.CharField(label='hospital', max_length = 50)
+    email = forms.EmailField(max_length = 254)
     role = forms.ChoiceField(choices = ROLES)
+
+class ClinicManegerSignupForm(SignupForm):
+    hospital = forms.CharField(label='hospital', max_length = 50)
+
 
 class LoginForm(forms.Form):
     username = forms.CharField(label='name', max_length = 50)
