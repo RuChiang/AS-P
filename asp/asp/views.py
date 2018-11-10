@@ -4,11 +4,21 @@ from asp.models import Item, Order, Ordered_Item, UserExt, Hospital, Available_I
 from django.http import HttpResponse
 from django.contrib.auth.models import Permission
 from django.utils import timezone
-from asp.forms import SignupForm, LoginForm
+from asp.forms import SignupForm, LoginForm, AddUser
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from asp import utils
 import os
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.http import urlsafe_base64_decode
+from asp.tokens import account_creation_token
+from django.utils.encoding import force_text
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
+from django.conf import settings
+
 
 
 # Create your views here.
@@ -66,25 +76,25 @@ def loginView(request):
     else:
         return HttpResponse("how did you even got here?")
 
-def signupView(request):
+def signupView(request, encrypted_pk):
     #  if it is post, it means user is signing up
     if request.method == 'POST':
         form = SignupForm(request.POST or None, request.FILES or None)
         if form.is_valid():
+            uid = urlsafe_base64_decode(encrypted_pk).decode()
+            user = User.objects.get(pk=uid)
+            print(f"about to change the details of {user}")
             # try to create a user here
-            username = form.cleaned_data['username']
-            email = form.cleaned_data['email']
-            password = form.cleaned_data['password']
-            user = User.objects.create_user(username, email, password)
+            # username = form.cleaned_data['username']
+            # password = form.cleaned_data['password']
+            # user = User.objects.create_user(username, email, password)
+            user.username = form.cleaned_data['username']
+            print(f"the password is {form.cleaned_data['password']}")
+            user.set_password(form.cleaned_data['password'])
             user.first_name = form.cleaned_data['first_name']
             user.last_name = form.cleaned_data['last_name']
+            print(f"this is how the user looks like {user}")
             user.save()
-            profile = UserExt(
-                user = user,
-                hospital = Hospital.objects.get(name = form.cleaned_data['hospital']),
-                role = form.cleaned_data['role']
-            )
-            profile.save()
             login(request, user)
             return HttpResponse("signed up successfully. The system has logged you in as well")
         else:
@@ -99,7 +109,7 @@ def signupView(request):
         Assumption: every user is expected to be working at Queen's Mary except the clinic managers
         '''
         form = SignupForm()
-        return render(request, 'asp/signup.html', {'form':form})
+        return render(request, 'asp/signup.html', {'form':form, 'PK':encrypted_pk})
     # # dunno which HTTP method its using
     else:
         return HttpResponse("how did you even got here?")
@@ -205,6 +215,54 @@ def viewDispatch(request):
         return render(request, 'asp/dispatch.html', {'orders' : [ order for order in orders_to_dispatch_in_this_go if len(orders_to_dispatch_in_this_go) > 0 ]})
     else:
         return HttpResponse('No Permission', status = 403)
+
+def addUser(request):
+    if request.method == 'POST':
+        form = AddUser(request.POST or None, request.FILES or None)
+        if form.is_valid():
+            # try to create a user here
+            to_email = form.cleaned_data['email']
+            user = User.objects.create_user(to_email,to_email,to_email)
+            user.is_active = False
+            print(f"adding the user with id {user.pk}")
+            user.save()
+            profile = UserExt(
+                user = user,
+                hospital = Hospital.objects.get(name = form.cleaned_data['hospital']),
+                role = form.cleaned_data['role']
+            )
+            profile.save()
+            current_site = get_current_site(request)
+            mail_subject = 'Activate Your Account'
+            message = render_to_string('account_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
+                'token': account_creation_token.make_token(user),
+            })
+            print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {to_email}")
+            send_mail(
+                mail_subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [to_email],
+            )
+        return HttpResponse('Please confirm your email address to complete the registration.')
+    else:
+        form = AddUser()
+    return render(request, 'asp/addUser.html', {'form': form})
+
+
+def activate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return HttpResponse('Can\'t find user')
+    if account_creation_token.check_token(user, token):
+        return redirect(f"/asp/signup/{uidb64}")
+    else:
+        return HttpResponse('Can\'t find user')
 
 ''' functions below are for debug uses '''
 ###########################################################
