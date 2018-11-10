@@ -78,11 +78,15 @@ def loginView(request):
 
 def signupView(request, encrypted_pk):
     #  if it is post, it means user is signing up
+    try:
+        uid = urlsafe_base64_decode(encrypted_pk).decode()
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return HttpResponse("No sneaking in here!!", status=403)
+
     if request.method == 'POST':
         form = SignupForm(request.POST or None, request.FILES or None)
         if form.is_valid():
-            uid = urlsafe_base64_decode(encrypted_pk).decode()
-            user = User.objects.get(pk=uid)
             print(f"about to change the details of {user}")
             # try to create a user here
             # username = form.cleaned_data['username']
