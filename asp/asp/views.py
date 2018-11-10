@@ -260,6 +260,7 @@ def activate(request, uidb64, token):
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         return HttpResponse('Can\'t find user')
     if account_creation_token.check_token(user, token):
+        user.is_active = True
         return redirect(f"/asp/signup/{uidb64}")
     else:
         return HttpResponse('Can\'t find user')

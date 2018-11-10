@@ -30,7 +30,7 @@ class SignupForm(forms.Form):
     first_name = forms.CharField(label='firstname', max_length = 50)
     last_name = forms.CharField(label='lastname', max_length = 50)
     username = forms.CharField(label='username', max_length = 50)
-    password = forms.CharField(label='password', max_length = 50)
+    password = forms.CharField(label='password', max_length = 32)
 
 class ClinicManegerSignupForm(SignupForm):
     hospital = forms.CharField(label='hospital', max_length = 50)
