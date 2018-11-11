@@ -11,7 +11,7 @@ class AddUser(forms.Form):
     )
     email = forms.EmailField(max_length = 254)
     role = forms.ChoiceField(choices = ROLES)
-    hospital = forms.CharField(label='hospital', max_length=50)
+    # hospital = forms.CharField(label='hospital', max_length=50)
 
 class SignupForm(forms.Form):
 

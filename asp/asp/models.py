@@ -39,7 +39,7 @@ class UserExt(models.Model):
     )
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='working_hospital')
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, null = True, blank = True, related_name='working_hospital')
     resetPassword = models.BooleanField(default=False)
     role = models.CharField(
         max_length = 2,
@@ -84,7 +84,7 @@ class Category(models.Model):
 class Item(models.Model):
     name = models.CharField(max_length = 200)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    description = models.CharField(max_length = 200, blank = True)
+    description = models.CharField(max_length = 200, null = True, blank = True)
     weight = models.FloatField(default = 0)
     image = models.ImageField(upload_to = '',max_length = 100, null = True, blank = True)
 

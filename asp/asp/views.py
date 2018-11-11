@@ -4,7 +4,7 @@ from asp.models import Item, Order, Ordered_Item, UserExt, Hospital, Available_I
 from django.http import HttpResponse
 from django.contrib.auth.models import Permission
 from django.utils import timezone
-from asp.forms import SignupForm, LoginForm, AddUser , GetPassword, ResetPassword
+from asp.forms import SignupForm, LoginForm, AddUser , GetPassword, ResetPassword, ClinicManegerSignupForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from asp import utils
@@ -80,35 +80,51 @@ def signupView(request, encrypted_pk):
     try:
         uid = urlsafe_base64_decode(encrypted_pk).decode()
         user = User.objects.get(pk=uid)
+        userExt = UserExt.objects.get(user = user)
+        role = userExt.role
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         return HttpResponse("No sneaking in here!!", status=403)
 
     if request.method == 'POST':
-        form = SignupForm(request.POST or None, request.FILES or None)
-        if form.is_valid():
-            print(f"about to change the details of {user}")
-            # try to create a user here
-            # username = form.cleaned_data['username']
-            # password = form.cleaned_data['password']
-            # user = User.objects.create_user(username, email, password)
-            user.username = form.cleaned_data['username']
-            print(f"the password is {form.cleaned_data['password']}")
-            user.set_password(form.cleaned_data['password'])
-            user.first_name = form.cleaned_data['first_name']
-            user.last_name = form.cleaned_data['last_name']
-            print(f"this is how the user looks like {user}")
-            user.save()
-            login(request, user)
-            return HttpResponse("signed up successfully. The system has logged you in as well")
+        if role == 'CM':
+            form = ClinicManegerSignupForm(request.POST or None, request.FILES or None)
+            if form.is_valid():
+                user.username = form.cleaned_data['username']
+                user.set_password(form.cleaned_data['password'])
+                user.first_name = form.cleaned_data['first_name']
+                user.last_name = form.cleaned_data['last_name']
+                user.save()
+                userExt.hospital = Hospital.objects.get(name = form.cleaned_data['hospital'])
+                userExt.save()
+                login(request, user)
+                return HttpResponse("signed up successfully. The system has logged you in as well")
+            else:
+                return HttpResponse("wrong" + str(form.errors))
         else:
-            return HttpResponse("wrong" + str(form.errors))
+            form = SignupForm(request.POST or None, request.FILES or None)
+            if form.is_valid():
+                user.username = form.cleaned_data['username']
+                user.set_password(form.cleaned_data['password'])
+                user.first_name = form.cleaned_data['first_name']
+                user.last_name = form.cleaned_data['last_name']
+                user.save()
+                userExt.hospital = Hospital.objects.get(name = 'Queen Mary Hospital Drone Port')
+                userExt.save()
+                login(request, user)
+                return HttpResponse("signed up successfully. The system has logged you in as well")
+            else:
+                return HttpResponse("wrong" + str(form.errors))
     #  a get method means the user want the form
     elif request.method == 'GET':
-        form = SignupForm()
+        # distinguish which form to send(Clinic manager needs the form speicifying the hospital)
+        if role == 'CM':
+            form = ClinicManegerSignupForm()
+        else:
+            form = SignupForm()
         return render(request, 'asp/signup.html', {'form':form, 'PK':encrypted_pk})
     # # dunno which HTTP method its using
     else:
-        return HttpResponse("how did you even got here?")
+        return HttpResponse("Getting here using neither POST nor GET")
 
 def marketPlace(request):
     if not request.user.is_authenticated:
@@ -204,7 +220,7 @@ def viewDispatch(request):
             for x in destination_hospitals:
                 if x not in vertices:
                     vertices.append(x)
-            print(vertices)
+            # print(vertices)
             itinerary = utils.generateItinerary(vertices, orders_to_dispatch_in_this_go)
             path_to_file = utils.generateCSV(itinerary)
 
@@ -213,6 +229,8 @@ def viewDispatch(request):
         return HttpResponse('No Permission', status = 403)
 
 def addUser(request):
+    if not request.user.is_superuser:
+        return HttpResponse("no Permission", status = 403)
     if request.method == 'POST':
         form = AddUser(request.POST or None, request.FILES or None)
         if form.is_valid():
@@ -220,23 +238,23 @@ def addUser(request):
             to_email = form.cleaned_data['email']
             user = User.objects.create_user(to_email,to_email,to_email)
             user.is_active = False
-            print(f"adding the user with id {user.pk}")
+            # print(f"adding the user with id {user.pk}")
             user.save()
             profile = UserExt(
                 user = user,
-                hospital = Hospital.objects.get(name = form.cleaned_data['hospital']),
+                # hospital = Hospital.objects.get(name = form.cleaned_data['hospital']),
                 role = form.cleaned_data['role']
             )
             profile.save()
             current_site = get_current_site(request)
             mail_subject = 'Activate Your Account'
-            message = render_to_string('account_email.html', {
+            message = render_to_string('activate_account_email.html', {
                 'user': user,
                 'domain': current_site.domain,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
                 'token': account_creation_token.make_token(user),
             })
-            print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {to_email}")
+            # print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {to_email}")
             send_mail(
                 mail_subject,
                 message,
@@ -258,8 +276,8 @@ def activate(request, uidb64, token):
         return HttpResponse('Can\'t find user')
     if account_creation_token.check_token(user, token):
         resetuser = UserExt.objects.get(user=user)
-        print(resetuser)
-        print(resetuser.resetPassword)
+        # print(resetuser)
+        # print(resetuser.resetPassword)
         if resetuser.resetPassword:
             resetuser.resetPassword = False
             resetuser.save()
@@ -269,9 +287,9 @@ def activate(request, uidb64, token):
             user.save()
             return redirect(f"/asp/signup/{uidb64}")
         else:
-            return HttpResponse("No sneaking in here!!", status=403)
+            return HttpResponse("a bug to fix here on line 272 in view.py", status=404)
     else:
-        return HttpResponse('Can\'t find user')
+        return HttpResponse('Invalid token')
 
 def forgotPassword(request):
     if(request.method == 'POST'):
@@ -286,16 +304,16 @@ def forgotPassword(request):
 
             resetuser.resetPassword = True
             resetuser.save()
-            print(resetuser.resetPassword)
+            # print(resetuser.resetPassword)
             current_site = get_current_site(request)
             mail_subject = 'Reset Password'
-            message = render_to_string('account_email.html', {
+            message = render_to_string('reset_password_email.html', {
                 'user': user,
                 'domain': current_site.domain,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
                 'token': account_creation_token.make_token(user),
             })
-            print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {user.email}")
+            # print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {user.email}")
             send_mail(
                 mail_subject,
                 message,

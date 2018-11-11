@@ -106,7 +106,7 @@ def generateItinerary(listOfHospitals, ordersToDispatch):
         list_of_priorities = []
         for col in list_of_lists_of_priorities:
             list_of_priorities.append(sum(col))
-        print(f"sum of cols of the list_of_lists_of_priorities {list_of_priorities}")
+        # print(f"sum of cols of the list_of_lists_of_priorities {list_of_priorities}")
         max_value = max(list_of_priorities)
         if len(list(filter(lambda x:x == max_value, list_of_priorities))) == 1:
             break
@@ -116,7 +116,7 @@ def generateItinerary(listOfHospitals, ordersToDispatch):
     ityData = []
     for hospital_stop in routes[max_index][0]:
         ityData.append(Hospital.objects.get(name = hospital_stop))
-    print(f"this is the ityData: \n {ityData}")
+    # print(f"this is the ityData: \n {ityData}")
     '''
     format the output
     '''
