@@ -25,6 +25,7 @@ class Hospital(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+
 class UserExt(models.Model):
     CLINIC_MANAGER = 'CM'
     DISPATCHER = 'DP'
@@ -38,7 +39,8 @@ class UserExt(models.Model):
     )
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name = 'working_hospital')
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='working_hospital')
+    resetPassword = bool
     role = models.CharField(
         max_length = 2,
         choices = ROLES,

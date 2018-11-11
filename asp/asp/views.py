@@ -4,17 +4,16 @@ from asp.models import Item, Order, Ordered_Item, UserExt, Hospital, Available_I
 from django.http import HttpResponse
 from django.contrib.auth.models import Permission
 from django.utils import timezone
-from asp.forms import SignupForm, LoginForm, AddUser
+from asp.forms import SignupForm, LoginForm, AddUser , GetPassword, ResetPassword
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from asp import utils
 import os
 from django.contrib.sites.shortcuts import get_current_site
-from django.utils.http import urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from asp.tokens import account_creation_token
 from django.utils.encoding import force_text
 from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
@@ -105,13 +104,6 @@ def signupView(request, encrypted_pk):
             return HttpResponse("wrong" + str(form.errors))
     #  a get method means the user want the form
     elif request.method == 'GET':
-        '''
-        CODE TO WRITE HERE
-        the only scenario that we will present the users the signup page is when they click the token contained in the email'
-        and their page redirects here. Get the token and decrypt it. The system should be able to retirve the email of the user
-        and also the assigned role
-        Assumption: every user is expected to be working at Queen's Mary except the clinic managers
-        '''
         form = SignupForm()
         return render(request, 'asp/signup.html', {'form':form, 'PK':encrypted_pk})
     # # dunno which HTTP method its using
@@ -251,10 +243,11 @@ def addUser(request):
                 settings.EMAIL_HOST_USER,
                 [to_email],
             )
-        return HttpResponse('Please confirm your email address to complete the registration.')
+        return HttpResponse('Email token has been sent')
     else:
         form = AddUser()
     return render(request, 'asp/addUser.html', {'form': form})
+
 
 
 def activate(request, uidb64, token):
@@ -264,10 +257,77 @@ def activate(request, uidb64, token):
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         return HttpResponse('Can\'t find user')
     if account_creation_token.check_token(user, token):
-        user.is_active = True
-        return redirect(f"/asp/signup/{uidb64}")
+        resetuser = UserExt.objects.get(user=user)
+        print(resetuser)
+        print(resetuser.resetPassword)
+        if resetuser.resetPassword:
+            resetuser.resetPassword = False
+            return redirect(f"/asp/resetPassword/{uidb64}")
+        elif user.is_active == False :
+            user.is_active = True
+            return redirect(f"/asp/signup/{uidb64}")
+        else:
+            return HttpResponse("No sneaking in here!!", status=403)
     else:
         return HttpResponse('Can\'t find user')
+
+def forgotPassword(request):
+    if(request.method == 'POST'):
+        form = GetPassword(request.POST or None, request.FILES or None)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            user = User.objects.get(username=username)
+            resetuser = UserExt.objects.get(user=user)
+
+            if(user is not None):
+                resetuser.resetPassword = True
+                resetuser.save()
+                print(resetuser.resetPassword)
+                current_site = get_current_site(request)
+                mail_subject = 'Reset Password'
+                message = render_to_string('account_email.html', {
+                    'user': user,
+                    'domain': current_site.domain,
+                    'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
+                    'token': account_creation_token.make_token(user),
+                })
+                print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {user.email}")
+                send_mail(
+                    mail_subject,
+                    message,
+                    settings.EMAIL_HOST_USER,
+                    [user.email],
+                )
+                return HttpResponse("Password reset email sent!")
+            else:
+                return HttpResponse("No such user")
+
+        else:
+            return HttpResponse("wrong" + str(form.errors))
+    else:
+        form = GetPassword()
+    return render(request, 'asp/forgotPassword.html', {'form': form})
+
+
+def resetPassword(request, encrypted_pk):
+    try:
+        uid = urlsafe_base64_decode(encrypted_pk).decode()
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return HttpResponse("No sneaking in here!!", status=403)
+
+    if request.method == 'POST':
+        form = ResetPassword(request.POST or None, request.FILES or None)
+        if form.is_valid():
+            user.password = form.cleaned_data['[password']
+            user.save()
+            return HttpResponse("Password updated!")
+        else:
+            return HttpResponse("wrong" + str(form.errors))
+    else:
+        form = ResetPassword()
+    return render(request, "asp/resetPassword.html", {'form':form, 'PK':encrypted_pk})
+
 
 ''' functions below are for debug uses '''
 ###########################################################

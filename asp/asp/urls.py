@@ -18,6 +18,8 @@ urlpatterns = [
     path('addUser', views.addUser, name='addUser'),
     path(r'activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         views.activate, name='activate'),
+    path('forgotPassword', views.forgotPassword, name='forgotPassword'),
+    path('resetPassword/<str:encrypted_pk>', views.resetPassword, name='resetPassword'),
 
 ]
 

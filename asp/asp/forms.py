@@ -25,5 +25,11 @@ class ClinicManegerSignupForm(SignupForm):
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(label='name', max_length = 50)
+    username = forms.CharField(label='username', max_length = 50)
     password = forms.CharField(label='password', max_length = 50)
+
+class GetPassword(forms.Form):
+    username = forms.CharField(label='username', max_length = 50)
+
+class ResetPassword(forms.Form):
+    password = forms.CharField(label='password', max_length = 32)
