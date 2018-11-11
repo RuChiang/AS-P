@@ -40,7 +40,7 @@ class UserExt(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='working_hospital')
-    resetPassword = bool
+    resetPassword = models.BooleanField(default=False)
     role = models.CharField(
         max_length = 2,
         choices = ROLES,

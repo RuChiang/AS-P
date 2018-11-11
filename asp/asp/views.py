@@ -262,9 +262,11 @@ def activate(request, uidb64, token):
         print(resetuser.resetPassword)
         if resetuser.resetPassword:
             resetuser.resetPassword = False
+            resetuser.save()
             return redirect(f"/asp/resetPassword/{uidb64}")
         elif user.is_active == False :
             user.is_active = True
+            user.save()
             return redirect(f"/asp/signup/{uidb64}")
         else:
             return HttpResponse("No sneaking in here!!", status=403)
@@ -276,31 +278,31 @@ def forgotPassword(request):
         form = GetPassword(request.POST or None, request.FILES or None)
         if form.is_valid():
             username = form.cleaned_data['username']
-            user = User.objects.get(username=username)
-            resetuser = UserExt.objects.get(user=user)
+            try:
+                user = User.objects.get(username=username)
+                resetuser = UserExt.objects.get(user=user)
+            except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+                return HttpResponse('user not found', status=404)
 
-            if(user is not None):
-                resetuser.resetPassword = True
-                resetuser.save()
-                print(resetuser.resetPassword)
-                current_site = get_current_site(request)
-                mail_subject = 'Reset Password'
-                message = render_to_string('account_email.html', {
-                    'user': user,
-                    'domain': current_site.domain,
-                    'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
-                    'token': account_creation_token.make_token(user),
-                })
-                print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {user.email}")
-                send_mail(
-                    mail_subject,
-                    message,
-                    settings.EMAIL_HOST_USER,
-                    [user.email],
-                )
-                return HttpResponse("Password reset email sent!")
-            else:
-                return HttpResponse("No such user")
+            resetuser.resetPassword = True
+            resetuser.save()
+            print(resetuser.resetPassword)
+            current_site = get_current_site(request)
+            mail_subject = 'Reset Password'
+            message = render_to_string('account_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
+                'token': account_creation_token.make_token(user),
+            })
+            print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {user.email}")
+            send_mail(
+                mail_subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [user.email],
+            )
+            return HttpResponse("Password reset email sent!")
 
         else:
             return HttpResponse("wrong" + str(form.errors))
@@ -319,9 +321,9 @@ def resetPassword(request, encrypted_pk):
     if request.method == 'POST':
         form = ResetPassword(request.POST or None, request.FILES or None)
         if form.is_valid():
-            user.password = form.cleaned_data['[password']
+            user.set_password(form.cleaned_data['password'])
             user.save()
-            return HttpResponse("Password updated!")
+            return  redirect("/asp/login")
         else:
             return HttpResponse("wrong" + str(form.errors))
     else:
