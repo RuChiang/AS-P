@@ -53,13 +53,20 @@ def loginView(request):
         form = LoginForm(request.POST)
         if form.is_valid():
             # try to create a user here
-
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             user = authenticate(username = username, password=password)
             if user is not None:
                 login(request, user)
-                return HttpResponse("logged in!!")
+                userext=UserExt.objects.get(user=user)
+                if userext.role == 'CM':
+                    return redirect(f"/asp/marketplace")
+                elif userext.role == 'DP':
+                    return redirect(f"/asp/viewDispatch")
+                elif userext.role == 'WP':
+                    return redirect(f"/asp/viewWarehouse")
+                else:
+                    return HttpResponse("logged in!!")
             else:
                 return HttpResponse("No such user")
 
@@ -74,6 +81,7 @@ def loginView(request):
     # # dunno which HTTP method its using
     else:
         return HttpResponse("how did you even got here?")
+
 
 def signupView(request, encrypted_pk):
     #  if it is post, it means user is signing up
@@ -96,8 +104,9 @@ def signupView(request, encrypted_pk):
                 user.save()
                 userExt.hospital = Hospital.objects.get(name = form.cleaned_data['hospital'])
                 userExt.save()
-                login(request, user)
-                return HttpResponse("signed up successfully. The system has logged you in as well")
+                #login(request, user)
+                #return HttpResponse("signed up successfully. The system has logged you in as well")
+                return redirect(f"/asp/login")
             else:
                 return HttpResponse("wrong" + str(form.errors))
         else:
@@ -160,7 +169,7 @@ def marketPlace(request):
                 msg = "Please input values for those supplies which you would like to order"
                 return render(request, 'asp/marketplace.html', {'warning':msg, 'item_list':items })
 
-            Order_model = Order(status='QFP', requester = UserExt.objects.get(user = request.user) , time_queued_processing=timezone.now(), priority=req_priority)
+            Order_model = Order(status='QFP', requester=UserExt.objects.get(user = request.user), time_queued_processing=timezone.now(), priority=req_priority)
             Order_model.save()
 
             # create an ordered_item, and subtract the quantity of the available supplies
