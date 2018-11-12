@@ -119,8 +119,9 @@ def signupView(request, encrypted_pk):
                 user.save()
                 userExt.hospital = Hospital.objects.get(name = 'Queen Mary Hospital Drone Port')
                 userExt.save()
-                login(request, user)
-                return HttpResponse("signed up successfully. The system has logged you in as well")
+                # login(request, user)
+                # return HttpResponse("signed up successfully. The system has logged you in as well")
+                return redirect(f"/asp/login")
             else:
                 return HttpResponse("wrong" + str(form.errors))
     #  a get method means the user want the form
