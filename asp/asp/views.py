@@ -33,6 +33,23 @@ def viewWarehouse(request):
     else:
         return HttpResponse('No Permission', status = 403)
 
+def delivery(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
+    if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
+        ordersToDeliver = Order.objects.filter(status = 'DSD').filter(requester = UserExt.objects.get(user = request.user).id)
+        if request.method == 'POST':
+            for item in request.POST:
+                if item == "Order_ID":
+                    order = Order.objects.get(id = int (request.POST[item]))
+                    order.status = 'DLD'
+                    order.time_delivered = timezone.now()
+                    order.save()
+            return redirect('/asp/delivery')
+        return render(request, 'asp/delivery.html', {'orders': ordersToDeliver})
+    else:
+        return HttpResponse('No Permission', status = 403)
+
 def downloadItinerary(request):
     file = open('asp/static/asp/itinerary.csv', 'rb')
     response = HttpResponse(content=file,content_type='text/csv')

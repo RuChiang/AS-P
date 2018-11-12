@@ -1,0 +1,19 @@
+{% extends "asp/header.html" %}
+{% block content %}
+<h1>View Delivery</h1>
+<h4>Here you can see all the orders that will be delivered in this batch</h4>
+<ul>
+    {% for order in orders %}
+        <li>
+            <p>
+                {{ order }} 
+                <form action="/asp/delivery" method="post">
+                    {% csrf_token %}
+                    <input type="submit" value="Delivered">
+                    <input type="hidden" name="Order_ID" value="{{order.id}}">
+                </form>
+            </p>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

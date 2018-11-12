@@ -13,6 +13,7 @@ urlpatterns = [
     path('signup/<str:encrypted_pk>', views.signupView, name='signup'),
     path('logout', views.logoutView, name='logout'),
     path('viewDispatch', views.viewDispatch, name='viewDispatch'),
+    path('delivery', views.delivery, name='delivery'),
     path('downloadItinerary', views.downloadItinerary, name='downloadItinerary'),
     path('viewWarehouse', views.viewWarehouse, name='viewWarehouse'),
     path('addUser', views.addUser, name='addUser'),
