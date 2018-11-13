@@ -165,7 +165,12 @@ class Order(models.Model):
         for item in Ordered_Item.objects.filter(order = self.id):
             # Find its weight
             sumWeight += Item.objects.get(name = item.item.name).weight * item.quantity
-        return sumWeight
+        return round(sumWeight, 2)
+    
+    def getPriorityString(self):
+        for i in self.PRIORITY:
+            if i[0] == self.priority:
+                return i[1]
 
     def __str__(self):
         return f"Order_id:{self.id} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time_queued_processing}"

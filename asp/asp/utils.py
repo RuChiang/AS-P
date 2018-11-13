@@ -125,3 +125,16 @@ def generateItinerary(listOfHospitals, ordersToDispatch):
     for hospital_object in ityData:
         itinerary_string.append([hospital_object.latitude, hospital_object.longtitude, hospital_object.altitude])
     return itinerary_string
+
+def generateShippingData(ordersToProcess):
+    pass
+
+def generatePDF(shippingData):
+    response = HttpResponse(content_type='asp/pdf')
+    response['Content-Disposition'] = 'attachment; filename="somefilename.pdf"'
+
+    p = canvas.Canvas(response)
+    p.drawString(100, 100, "Hello world.")
+    p.showPage()
+    p.save()
+    return response

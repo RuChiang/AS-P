@@ -16,6 +16,7 @@ urlpatterns = [
     path('delivery', views.delivery, name='delivery'),
     path('downloadItinerary', views.downloadItinerary, name='downloadItinerary'),
     path('viewWarehouse', views.viewWarehouse, name='viewWarehouse'),
+    path('viewWarehouseProcessing', views.viewWarehouseProcessing, name='viewWarehouseProcessing'),
     path('addUser', views.addUser, name='addUser'),
     path(r'activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         views.activate, name='activate'),

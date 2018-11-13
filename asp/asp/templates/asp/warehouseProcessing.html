@@ -1,0 +1,27 @@
+{% extends "asp/header.html" %}
+{% block content %}
+<h1>Welcome to the warehouse!</h1>
+<h2>Get ready to dispatch!</h2>
+
+<ul>
+{% for order in orders %}
+    <li>
+            <h2>Order Number: {{order.id}}</h2>
+            <h4>Order placed at: {{order.time_queued_processing}}</h4>
+            <h4>Priority: {{order.getPriorityString}}</h4>
+            <h4>Weight: {{order.getTotalWeight}}</h4>
+         <form action="/asp/viewWarehouseProcessing" method="get">
+            <input type="hidden" name="id" value="{{order.id}}">
+            <input type="submit" value="Queue for dispatch">
+        </form>
+    </li>
+{% endfor %}
+
+<br>
+
+<form action="/asp/logout" method="get">
+    <input type="submit" value="Log out">
+</form>
+
+{% endblock %}
+

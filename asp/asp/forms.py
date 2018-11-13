@@ -20,7 +20,7 @@ class SignupForm(forms.Form):
     username = forms.CharField(label='username', max_length = 50)
     password = forms.CharField(label='password', max_length = 32)
 
-class ClinicManegerSignupForm(SignupForm):
+class ClinicManagerSignupForm(SignupForm):
     hospital = forms.CharField(label='hospital', max_length = 50)
 
 

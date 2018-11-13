@@ -4,7 +4,7 @@ from asp.models import Item, Order, Ordered_Item, UserExt, Hospital, Available_I
 from django.http import HttpResponse
 from django.contrib.auth.models import Permission
 from django.utils import timezone
-from asp.forms import SignupForm, LoginForm, AddUser , GetPassword, ResetPassword, ClinicManegerSignupForm
+from asp.forms import SignupForm, LoginForm, AddUser , GetPassword, ResetPassword, ClinicManagerSignupForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from asp import utils
@@ -21,15 +21,39 @@ from django.conf import settings
 
 
 # Create your views here.
+def viewWarehouseProcessing(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
+    if UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
+        ordersToProcess = Order.objects.filter(status = 'PBW').order_by('-priority', 'time_queued_processing')
+        if request.method == 'GET':
+            # see if this is simply routing
+            if len(request.GET) == 0:
+                shippingData = utils.generateShippingData(ordersToProcess)
+                path_to_file = utils.generatePDF(shippingData)
+                return render(request, 'asp/warehouseProcessing.html', {'orders': ordersToProcess})
+            order = Order.objects.get(id= int (request.GET['id']))
+            order.status = 'QFD'
+            order.time_queued_dispatch = timezone.now()
+            order.save()
+            return redirect('/asp/viewWarehouse')
+    else:
+        return HttpResponse('No Permission', status = 403)
 
 def viewWarehouse(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
-        '''
-        CODE HERE FOR VIEWING AND OPERATING ON THE ITEMS IN WAREHOUSE
-        '''
-        pass
+        ordersToPickPack = Order.objects.filter(status = 'QFP').order_by('-priority', 'time_queued_processing')
+        if request.method == 'GET':
+            # see if this is simply routing
+            if len(request.GET) == 0:
+                return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack})
+            order = Order.objects.get(id= int (request.GET['id']))
+            order.status = 'PBW'
+            order.time_processing = timezone.now()
+            order.save()
+            return redirect('/asp/viewWarehouseProcessing')
     else:
         return HttpResponse('No Permission', status = 403)
 
@@ -60,6 +84,7 @@ def downloadItinerary(request):
 def logoutView(request):
     if request.user.is_authenticated:
         logout(request)
+        return redirect(f"/asp/login")
         return HttpResponse("logged out!!")
     else:
         return HttpResponse("You are not even logged in")
@@ -112,7 +137,7 @@ def signupView(request, encrypted_pk):
 
     if request.method == 'POST':
         if role == 'CM':
-            form = ClinicManegerSignupForm(request.POST or None, request.FILES or None)
+            form = ClinicManagerSignupForm(request.POST or None, request.FILES or None)
             if form.is_valid():
                 user.username = form.cleaned_data['username']
                 user.set_password(form.cleaned_data['password'])
@@ -145,7 +170,7 @@ def signupView(request, encrypted_pk):
     elif request.method == 'GET':
         # distinguish which form to send(Clinic manager needs the form speicifying the hospital)
         if role == 'CM':
-            form = ClinicManegerSignupForm()
+            form = ClinicManagerSignupForm()
         else:
             form = SignupForm()
         return render(request, 'asp/signup.html', {'form':form, 'PK':encrypted_pk})
