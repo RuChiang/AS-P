@@ -6,6 +6,7 @@ from django.views.static import serve
 
 
 urlpatterns = [
+    path('pdfDownload', views.pdfDownload, name='pdfDownload'),
     path('items', views.ItemsViewAll.as_view(), name='items'),
     path('self', views.UserViewSelf, name='self'),
     path('marketplace', views.marketPlace, name='marketplace'),

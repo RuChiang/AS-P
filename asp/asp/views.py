@@ -17,10 +17,26 @@ from django.utils.encoding import force_bytes
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
+from reportlab.pdfgen import canvas
 
 
 
 # Create your views here.
+def pdfDownload(request):
+    if request.method == 'GET':
+        print("Ssss")
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="somefilename.pdf"'
+        p = canvas.Canvas(response)
+        order = Order.objects.get(id= 13)
+        print(order)
+        p.drawString(30,30,order.status)
+        p.showPage()
+        p.save()
+        return response
+    return redirect('/asp/viewWarehouseProcessing')
+
+
 def viewWarehouseProcessing(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
@@ -29,9 +45,7 @@ def viewWarehouseProcessing(request):
         if request.method == 'GET':
             # see if this is simply routing
             if len(request.GET) == 0:
-                shippingData = utils.generateShippingData(ordersToProcess)
-                path_to_file = utils.generatePDF(shippingData)
-                return render(request, 'asp/warehouseProcessing.html', {'orders': ordersToProcess})
+                return redirect(request, 'asp/viewWarehouseProcessing.html', {'orders': ordersToProcess})
             order = Order.objects.get(id= int (request.GET['id']))
             order.status = 'QFD'
             order.time_queued_dispatch = timezone.now()
@@ -53,6 +67,7 @@ def viewWarehouse(request):
             order.status = 'PBW'
             order.time_processing = timezone.now()
             order.save()
+            #return HttpResponse("asdf")
             return redirect('/asp/viewWarehouseProcessing')
     else:
         return HttpResponse('No Permission', status = 403)
