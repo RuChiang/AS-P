@@ -168,7 +168,7 @@ class Order(models.Model):
         return sumWeight
 
     def getTotalWeightRounded(self):
-        return round(self.getTotalWeight, 2)
+        return round(self.getTotalWeight(), 2)
     
     def getPriorityString(self):
         for i in self.PRIORITY:

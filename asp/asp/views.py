@@ -23,14 +23,18 @@ from reportlab.lib.units import cm
 
 
 # Create your views here.
+
 def pdfDownload(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
     if request.method == 'GET':
-        print("Ssss")
+        #Define file type to create i.e. pdf
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="shipping_label_' + str(request.GET['id']) + '.pdf"'
+        
+        #This is where we throw all the necessary info about the order into
         p = canvas.Canvas(response)
         order = Order.objects.get(id = int(request.GET['id']) )
-        count = 1
         textObject = p.beginText()
         textObject.setTextOrigin(2*cm, 27*cm)
         textObject.setFont('Times-Bold', 25)
@@ -42,6 +46,7 @@ def pdfDownload(request):
         textObject.setFont('Times-Bold', 16)
         textObject.textLine("Contents: ")
         textObject.setFont('Times-Roman', 12)
+        count = 1
         for item in Ordered_Item.objects.filter(order_id = order.id):
             textObject.textLine('        ' + str(count) + '. ' + str(item.item.name))
             textObject.textLine('        ' + '        ' + " - Quantity: " + str(item.quantity))
@@ -52,7 +57,6 @@ def pdfDownload(request):
         textObject.setFont('Times-Roman', 12)
         textObject.textLine('        ' + str(order.requester.hospital.name))
         p.drawText(textObject)
-        # p.showPage()
         p.save()
         return response
     return redirect('/asp/viewWarehouseProcessing')
@@ -71,6 +75,7 @@ def viewWarehouseProcessing(request):
             order.status = 'QFD'
             order.time_queued_dispatch = timezone.now()
             order.save()
+            #Go back and select another order to queue for dispatch
             return redirect('/asp/viewWarehouse')
     else:
         return HttpResponse('No Permission', status = 403)
@@ -88,7 +93,6 @@ def viewWarehouse(request):
             order.status = 'PBW'
             order.time_processing = timezone.now()
             order.save()
-            #return HttpResponse("asdf")
             return redirect('/asp/viewWarehouseProcessing')
     else:
         return HttpResponse('No Permission', status = 403)
@@ -96,6 +100,7 @@ def viewWarehouse(request):
 def delivery(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
+
     if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
         ordersToDeliver = Order.objects.filter(status = 'DSD').filter(requester = UserExt.objects.get(user = request.user).id)
         if request.method == 'POST':
@@ -233,7 +238,6 @@ def marketPlace(request):
                     req_priority = utils.transform_priority_to_integer(request.GET[item])
 
             for orders_item in orders_items:
-                # print(orders_item)
                 orders_item_abstract = Item.objects.get(name = str(orders_item))
                 orders_item_supplying_hospital = UserExt.objects.get(user = request.user).hospital.supplying_hospital
                 if not Available_Item.objects.get(item_abstract = orders_item_abstract,
@@ -285,7 +289,7 @@ def viewDispatch(request):
 
             for count, order in enumerate(ordersToDispatch):
                 # 1.2 being the weight of the container
-                sum_weight += order.getTotalWeight() + 1.2
+                sum_weight += (order.getTotalWeight() + 1.2)
                 if sum_weight > weight_limit:
                     break
                 destination_hospitals.append(UserExt.objects.get(id = order.requester.id).hospital)
