@@ -18,6 +18,7 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
 from reportlab.pdfgen import canvas
+from reportlab.lib.units import cm
 
 
 
@@ -26,12 +27,32 @@ def pdfDownload(request):
     if request.method == 'GET':
         print("Ssss")
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="somefilename.pdf"'
+        response['Content-Disposition'] = 'attachment; filename="shipping_label_' + str(request.GET['id']) + '.pdf"'
         p = canvas.Canvas(response)
-        order = Order.objects.get(id= 13)
-        print(order)
-        p.drawString(30,30,order.status)
-        p.showPage()
+        order = Order.objects.get(id = int(request.GET['id']) )
+        count = 1
+        textObject = p.beginText()
+        textObject.setTextOrigin(2*cm, 27*cm)
+        textObject.setFont('Times-Bold', 25)
+        textObject.textLine("Shipping label ")
+        textObject.setFont('Times-Bold', 16)
+        textObject.textLine("Order number: " + str(order.id))
+        textObject.setFont('Times-Roman', 8)
+        textObject.textLine("")
+        textObject.setFont('Times-Bold', 16)
+        textObject.textLine("Contents: ")
+        textObject.setFont('Times-Roman', 12)
+        for item in Ordered_Item.objects.filter(order_id = order.id):
+            textObject.textLine('        ' + str(count) + '. ' + str(item.item.name))
+            textObject.textLine('        ' + '        ' + " - Quantity: " + str(item.quantity))
+            count += 1
+        textObject.textLine("")
+        textObject.setFont('Times-Bold', 16)
+        textObject.textLine("Destination Hospital: ")
+        textObject.setFont('Times-Roman', 12)
+        textObject.textLine('        ' + str(order.requester.hospital.name))
+        p.drawText(textObject)
+        # p.showPage()
         p.save()
         return response
     return redirect('/asp/viewWarehouseProcessing')
@@ -45,7 +66,7 @@ def viewWarehouseProcessing(request):
         if request.method == 'GET':
             # see if this is simply routing
             if len(request.GET) == 0:
-                return redirect(request, 'asp/viewWarehouseProcessing.html', {'orders': ordersToProcess})
+                return render(request, 'asp/warehouseProcessing.html', {'orders': ordersToProcess})
             order = Order.objects.get(id= int (request.GET['id']))
             order.status = 'QFD'
             order.time_queued_dispatch = timezone.now()
@@ -100,7 +121,6 @@ def logoutView(request):
     if request.user.is_authenticated:
         logout(request)
         return redirect(f"/asp/login")
-        return HttpResponse("logged out!!")
     else:
         return HttpResponse("You are not even logged in")
 

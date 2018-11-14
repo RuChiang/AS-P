@@ -165,7 +165,10 @@ class Order(models.Model):
         for item in Ordered_Item.objects.filter(order = self.id):
             # Find its weight
             sumWeight += Item.objects.get(name = item.item.name).weight * item.quantity
-        return round(sumWeight, 2)
+        return sumWeight
+
+    def getTotalWeightRounded(self):
+        return round(self.getTotalWeight, 2)
     
     def getPriorityString(self):
         for i in self.PRIORITY:
