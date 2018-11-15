@@ -226,7 +226,11 @@ def marketPlace(request):
             req_priority = 1
             for item in request.GET:
                 if item != 'priority':
-                    orders_items[str(item)] = int(request.GET[item])
+                    if (len(request.GET[item]) == 0):
+                        itemQuantity = 0
+                    else:
+                        itemQuantity = int(request.GET[item])
+                    orders_items[str(item)] = itemQuantity
                 else:
                     req_priority = utils.transform_priority_to_integer(request.GET[item])
 

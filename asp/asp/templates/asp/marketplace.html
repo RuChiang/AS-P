@@ -1,5 +1,8 @@
 {% extends "asp/header.html" %}
 {% block content %}
+{% load static %}
+<script type="text/javascript" src="{% static "asp/marketPlace.js" %}"></script>
+
 <h1>This is the marketplace</h1>
 <h4>You can view the available stocks, and place your order here</h4>
 
@@ -12,29 +15,33 @@
 <form action="/asp/marketplace" method="get">
     <ul>
     {% for category, items in item_list.items %}
-         <li>
-             <h3>Category - {{category}}</h3>
-             <ol>
-                 {% for item in items %}
-                    <li>
-                        <label for="{{ item.name }}"> {{ item.name }}  - </label>
-                        <input id="{{ item.name }}" class="orderQuantity" type="number" name="{{ item.name }}" value="0">
-                        <input class="{{ item.name }}" type="hidden" value="{{ item.weight }}">
-                        <br>
-                        <div>
-                            {% if item.image %}
-                            <img src="{{item.image.url}}" height="100" />
-                            {% endif %}
-                        </div>
-                        <br>
-                        <span>Description - {{item.description}}</span>
-                        <br>
-                        <span>Shipping Wieght - {{item.weight}}</span>
-                    </li>
-                 {% endfor %}
-             </ol>
+        <li>
+            <h3>Category - {{category}}</h3>
+            <ol>
+                {% for item in items %}
+                    <div id="{{ item.name }}">
+                        <li>
+                            <label for="{{ item.name }}"> {{ item.name }}  - </label>
+                            <input class="itemQuantity" type="number" name="{{ item.name }}" value="0">
+                            <input class="itemWeight" type="hidden" value="{{ item.weight }}">
+                            <br>
+                            <div>
+                                {% if item.image %}
+                                <img src="{{item.image.url}}" height="100" />
+                                {% endif %}
+                            </div>
+                            <br>
+                            <span>Description - {{item.description}}</span>
+                            <br>
+                            <span>Shipping Wieght - {{item.weight}}</span>
+                        </li>
+                    </div>
+                {% endfor %}
+            </ol>
+        </li>
     {% endfor %}
     </ul>
+    <h2>Weight of order: <span id="sumWeight"></span>kg</h2>
     <label for=priority> Priority  - </label>
     <select name="priority" id="priority">
         <option value="low">Low</option>
