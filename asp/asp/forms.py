@@ -18,7 +18,7 @@ class SignupForm(forms.Form):
     first_name = forms.CharField(label='firstname', max_length = 50)
     last_name = forms.CharField(label='lastname', max_length = 50)
     username = forms.CharField(label='username', max_length = 50)
-    password = forms.CharField(label='password', max_length = 32)
+    password = forms.CharField(label='password', max_length = 32, widget=forms.PasswordInput)
 
 class ClinicManagerSignupForm(SignupForm):
     hospital = forms.CharField(label='hospital', max_length = 50)
@@ -26,10 +26,10 @@ class ClinicManagerSignupForm(SignupForm):
 
 class LoginForm(forms.Form):
     username = forms.CharField(label='username', max_length = 50)
-    password = forms.CharField(label='password', max_length = 50)
+    password = forms.CharField(label='password', max_length = 32, widget=forms.PasswordInput)
 
 class GetPassword(forms.Form):
     username = forms.CharField(label='username', max_length = 50)
 
 class ResetPassword(forms.Form):
-    password = forms.CharField(label='password', max_length = 32)
+    password = forms.CharField(label='password', max_length = 32, widget=forms.PasswordInput)
