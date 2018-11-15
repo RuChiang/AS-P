@@ -12,16 +12,19 @@
         <h4>Order Number: {{order.id}}</h4>
         <p>Order placed at: {{order.time_queued_processing}}</p>
         <p>Priority: {{order.getPriorityString}}</p>
-        <p>Weight: {{order.getTotalWeight}}</p>
+        <p>Weight: {{ order.getTotalWeightRounded }}</p>
     </li>
 {% endfor %}
 </ul>
 
+{% if orders|length > 0 %}
+
 <form action="/asp/viewWarehouseProcessing" method="get">
-   <input type="hidden" name="order_id" value="{{  order_to_pickpack.id }}">
+   <input type="hidden" name="order_id" value="{{ first_order }}">
    <input type="submit" value="Begin picking and packing">
 </form>
 
+{% endif %}
 <br>
 
 <form action="/asp/logout" method="get">

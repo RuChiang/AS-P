@@ -149,6 +149,9 @@ class Order(models.Model):
             weight_list.append(Item.objects.get(name = item.item.name).weight * item.quantity)
         return math.fsum(weight_list)
 
+    def getTotalWeightRounded(self):
+        return round(self.getTotalWeight(), 2)
+
     def getPriorityString(self):
         for i in self.PRIORITY:
             if i[0] == self.priority:
