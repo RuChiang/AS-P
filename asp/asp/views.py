@@ -87,10 +87,7 @@ def viewWarehouse(request):
                 order.save()
 
             #TODO: order_to_pickpack will break if there is no item
-        if len(ordersToPickPack) > 0:
-            return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack, 'first_order': ordersToPickPack[0].id})
-        else:
-            return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack})
+        return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack, 'first_order': (ordersToPickPack[0].id if len(ordersToPickPack) > 0 else -1) })
     else:
         return HttpResponse('No Permission', status = 403)
 
