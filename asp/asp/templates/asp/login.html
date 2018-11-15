@@ -3,7 +3,12 @@
 <form action="/asp/login" method="post">
     {% csrf_token %}
     {{ form }}
-    <input type="submit" value="submit">
+    <br>
+    <input type="submit" value="Submit">
+</form>
+<br>
+<form action="/asp/forgotPassword" method="get">
+    <input type="submit" value="Forgot Password">
 </form>
 
 {% endblock %}
