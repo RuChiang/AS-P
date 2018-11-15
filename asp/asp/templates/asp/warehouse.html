@@ -12,7 +12,7 @@
         <h4>Order Number: {{order.id}}</h4>
         <p>Order placed at: {{order.time_queued_processing}}</p>
         <p>Priority: {{order.getPriorityString}}</p>
-        <p>Weight: {{order.getTotalWeightRounded}}</p>
+        <p>Weight: {{order.getTotalWeight}}</p>
     </li>
 {% endfor %}
 </ul>

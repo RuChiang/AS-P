@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-import collections
+import math
 # Create your models here.
 
 
@@ -142,15 +142,12 @@ class Order(models.Model):
     time_delivered = models.DateTimeField(null = True, blank = True)
 
     def getTotalWeight(self):
-        sumWeight = 0.0
+        weight_list = []
         # ID of all ordered items from current order
         for item in Ordered_Item.objects.filter(order = self.id):
             # Find its weight
-            sumWeight += Item.objects.get(name = item.item.name).weight * item.quantity
-        return sumWeight
-
-    def getTotalWeightRounded(self):
-        return round(self.getTotalWeight(), 2)
+            weight_list.append(Item.objects.get(name = item.item.name).weight * item.quantity)
+        return math.fsum(weight_list)
 
     def getPriorityString(self):
         for i in self.PRIORITY:
