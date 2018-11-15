@@ -4,27 +4,23 @@
 <h2>Get ready to dispatch!</h2>
 
 <ul>
-{% for order in orders %}
-        <li>
-            <h2>Order Number: {{order.id}}</h2>
-            <h4>Order placed at: {{order.time_queued_processing}}</h4>
-            <h4>Priority: {{order.getPriorityString}}</h4>
-            <h4>Weight: {{order.getTotalWeightRounded}}</h4>
-            <form action="/asp/viewWarehouseProcessing" method="get">
-                <input type="hidden" name="id" value="{{order.id}}">
-                <input type="submit" value="Queue for dispatch">
-            </form>
-        </li>
-{% endfor %}
+    <li>Order Number: {{order_to_display.id}}</li>
+    <li>Order placed at: {{order_to_display.time_queued_processing}}</li>
+    <li>Priority: {{order_to_display.getPriorityString}}</li>
+    <li>Weight: {{order_to_display.getTotalWeightRounded}}</li>
 </ul>
 
 <br>
-{% for order in orders %}
-    <form action="/asp/pdfDownload" method="get">
-        <input type="hidden" name="id" value="{{order.id}}">
-        <input type="submit" value="Download Shipping Label">
-    </form>
-{% endfor %}
+
+<form action="/asp/downloadShippingLabel" method="get">
+    <input type="hidden" name="order_id" value="{{order_to_display.id}}">
+    <input type="submit" value="Download Shipping Label">
+</form>
+
+<form action="/asp/viewWarehouse" method="get">
+    <input type="hidden" name="order_id" value="{{order_to_display.id}}">
+    <input type="submit" value="Queue for dispatch">
+</form>
 
 <br>
 
@@ -33,4 +29,3 @@
 </form>
 
 {% endblock %}
-

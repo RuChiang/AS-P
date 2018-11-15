@@ -19,64 +19,56 @@ from django.core.mail import send_mail
 from django.conf import settings
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
-
-
-
 # Create your views here.
 
-def pdfDownload(request):
-    if not request.user.is_authenticated:
-        return HttpResponse('No Permission', status = 403)
-    if request.method == 'GET':
-        #Define file type to create i.e. pdf
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="shipping_label_' + str(request.GET['id']) + '.pdf"'
-        
-        #This is where we throw all the necessary info about the order into
-        p = canvas.Canvas(response)
-        order = Order.objects.get(id = int(request.GET['id']) )
-        textObject = p.beginText()
-        textObject.setTextOrigin(2*cm, 27*cm)
-        textObject.setFont('Times-Bold', 25)
-        textObject.textLine("Shipping label ")
-        textObject.setFont('Times-Bold', 16)
-        textObject.textLine("Order number: " + str(order.id))
-        textObject.setFont('Times-Roman', 8)
-        textObject.textLine("")
-        textObject.setFont('Times-Bold', 16)
-        textObject.textLine("Contents: ")
-        textObject.setFont('Times-Roman', 12)
-        count = 1
-        for item in Ordered_Item.objects.filter(order_id = order.id):
-            textObject.textLine('        ' + str(count) + '. ' + str(item.item.name))
-            textObject.textLine('        ' + '        ' + " - Quantity: " + str(item.quantity))
-            count += 1
-        textObject.textLine("")
-        textObject.setFont('Times-Bold', 16)
-        textObject.textLine("Destination Hospital: ")
-        textObject.setFont('Times-Roman', 12)
-        textObject.textLine('        ' + str(order.requester.hospital.name))
-        p.drawText(textObject)
-        p.save()
-        return response
-    return redirect('/asp/viewWarehouseProcessing')
+def downloadShippingLabel(request):
+    order = Order.objects.get(id = int(request.GET['order_id']))
+    shippingData = utils.generateShippingData(order)
+
+    #Define file type to create i.e. pdf
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="shipping_label_' + str(order.id) + '.pdf"'
+
+    #This is where we throw all the necessary info about the order into
+    p = canvas.Canvas(response)
+    textObject = p.beginText()
+    textObject.setTextOrigin(2*cm, 27*cm)
+    textObject.setFont('Times-Bold', 25)
+    textObject.textLine("Shipping label ")
+    textObject.setFont('Times-Bold', 16)
+    textObject.textLine("Order number: " + str(order.id))
+    textObject.setFont('Times-Roman', 8)
+    textObject.textLine("")
+    textObject.setFont('Times-Bold', 16)
+    textObject.textLine("Contents: ")
+    textObject.setFont('Times-Roman', 12)
+    count = 1
+    for item in shippingData:
+        textObject.textLine('        ' + str(count) + '. ' + str(item.item.name))
+        textObject.textLine('        ' + '        ' + " - Quantity: " + str(item.quantity))
+        count += 1
+    textObject.textLine("")
+    textObject.setFont('Times-Bold', 16)
+    textObject.textLine("Destination Hospital: ")
+    textObject.setFont('Times-Roman', 12)
+    textObject.textLine('        ' + str(order.requester.hospital.name))
+    p.drawText(textObject)
+    p.save()
+    return response
 
 
 def viewWarehouseProcessing(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
-        ordersToProcess = Order.objects.filter(status = 'PBW').order_by('-priority', 'time_queued_processing')
-        if request.method == 'GET':
-            # see if this is simply routing
-            if len(request.GET) == 0:
-                return render(request, 'asp/warehouseProcessing.html', {'orders': ordersToProcess})
-            order = Order.objects.get(id= int (request.GET['id']))
-            order.status = 'QFD'
-            order.time_queued_dispatch = timezone.now()
-            order.save()
-            #Go back and select another order to queue for dispatch
-            return redirect('/asp/viewWarehouse')
+
+        order_id = int(request.GET['order_id'])
+        order = Order.objects.get(id= order_id)
+        order.status = 'PBW'
+        order.time_processing = timezone.now()
+        order.save()
+
+        return render(request, 'asp/warehouseProcessing.html', {'order_to_display': order})
     else:
         return HttpResponse('No Permission', status = 403)
 
@@ -86,14 +78,16 @@ def viewWarehouse(request):
     if UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
         ordersToPickPack = Order.objects.filter(status = 'QFP').order_by('-priority', 'time_queued_processing')
         if request.method == 'GET':
-            # see if this is simply routing
-            if len(request.GET) == 0:
-                return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack})
-            order = Order.objects.get(id= int (request.GET['id']))
-            order.status = 'PBW'
-            order.time_processing = timezone.now()
-            order.save()
-            return redirect('/asp/viewWarehouseProcessing')
+            if len(request.GET) != 0:
+                # update the status of the specified order to queue for dispatch
+                order_id = int(request.GET['order_id'])
+                order = Order.objects.get(id= order_id)
+                order.status = 'QFD'
+                order.time_queued_dispatch = timezone.now()
+                order.save()
+
+            #TODO: order_to_pickpack will break if there is no item
+        return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack, 'order_to_pickpack': ordersToPickPack[0]})
     else:
         return HttpResponse('No Permission', status = 403)
 
@@ -120,7 +114,6 @@ def downloadItinerary(request):
     response = HttpResponse(content=file,content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="itinerary.csv"'
     return response
-
 
 def logoutView(request):
     if request.user.is_authenticated:
@@ -356,8 +349,6 @@ def addUser(request):
     else:
         form = AddUser()
     return render(request, 'asp/addUser.html', {'form': form})
-
-
 
 def activate(request, uidb64, token):
     try:

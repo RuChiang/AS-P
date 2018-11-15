@@ -2,22 +2,25 @@
 {% block content %}
 <h1>Welcome to the warehouse!</h1>
 <h2>Pack and get ready for processing when ready!</h2>
-
+<br>
+<br>
+<br>
 
 <ul>
 {% for order in orders %}
     <li>
-            <h2>Order Number: {{order.id}}</h2>
-            <h4>Order placed at: {{order.time_queued_processing}}</h4>
-            <h4>Priority: {{order.getPriorityString}}</h4>
-            <h4>Weight: {{order.getTotalWeightRounded}}</h4>
-         <form action="/asp/viewWarehouse" method="get">
-            <input type="hidden" name="id" value="{{order.id}}">
-            <input type="submit" value="Begin picking and packing">
-        </form>
+        <h4>Order Number: {{order.id}}</h4>
+        <p>Order placed at: {{order.time_queued_processing}}</p>
+        <p>Priority: {{order.getPriorityString}}</p>
+        <p>Weight: {{order.getTotalWeightRounded}}</p>
     </li>
 {% endfor %}
 </ul>
+
+<form action="/asp/viewWarehouseProcessing" method="get">
+   <input type="hidden" name="order_id" value="{{  order_to_pickpack.id }}">
+   <input type="submit" value="Begin picking and packing">
+</form>
 
 <br>
 
@@ -26,4 +29,3 @@
 </form>
 
 {% endblock %}
-

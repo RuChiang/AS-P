@@ -56,24 +56,6 @@ class UserExt(models.Model):
     def __str__(self):
         return f"{self.user.username}: {self.role}"
 
-# class ClinicManager(UserExt):
-#     class Meta:
-#         permissions = (
-#             ("can_view_items_and_order", "Can view items and place orders"),
-#         )
-#
-# class WarehousePeronnel(UserExt):
-#     class Meta:
-#         permissions = (
-#             ("can_operate_on_wareshouse_orders", "Can operate items to be processed in the Warehouse"),
-#         )
-#
-# class Dispatcher(UserExt):
-#     class Meta:
-#         permissions = (
-#             ("can_operate_on_dispatch_queue", "Can operate on the dispatch queue"),
-#         )
-
 class Category(models.Model):
     name = models.CharField(max_length = 200)
 
@@ -169,14 +151,14 @@ class Order(models.Model):
 
     def getTotalWeightRounded(self):
         return round(self.getTotalWeight(), 2)
-    
+
     def getPriorityString(self):
         for i in self.PRIORITY:
             if i[0] == self.priority:
                 return i[1]
 
     def __str__(self):
-        return f"Order_id:{self.id} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time_queued_processing}"
+        return f"Order_id:{self.id} | Priority: {self.priority} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time_queued_processing}"
 
 
 class Ordered_Item(models.Model):

@@ -127,14 +127,4 @@ def generateItinerary(listOfHospitals, ordersToDispatch):
     return itinerary_string
 
 def generateShippingData(ordersToProcess):
-    pass
-
-def generatePDF(shippingData):
-    response = HttpResponse(content_type='asp/pdf')
-    response['Content-Disposition'] = 'attachment; filename="somefilename.pdf"'
-
-    p = canvas.Canvas(response)
-    p.drawString(100, 100, "Hello world.")
-    p.showPage()
-    p.save()
-    return response
+    return [ item for item in Ordered_Item.objects.filter(order_id = ordersToProcess.id)]
