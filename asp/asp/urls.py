@@ -15,10 +15,6 @@ urlpatterns = [
     path(r'activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
     views.activate, name='activate'),
 
-    # debugging routes
-    path('items', views.ItemsViewAll.as_view(), name='items'),
-    path('self', views.UserViewSelf, name='self'),
-
     # clinic manager routes
     path('marketplace', views.marketPlace, name='marketplace'),
 
@@ -35,6 +31,10 @@ urlpatterns = [
     # admin routes
     path('addUser', views.addUser, name='addUser'),
 
+    # debugging routes
+    path('orders', views.OrdersViewAll.as_view(), name='orders'),    
+    path('items', views.ItemsViewAll.as_view(), name='items'),
+    path('self', views.UserViewSelf, name='self'),
 ]
 
 if settings.DEBUG:

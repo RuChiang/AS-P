@@ -437,6 +437,11 @@ def resetPassword(request, encrypted_pk):
 class ItemsViewAll(ListView):
     model = Available_Item
 
+class OrdersViewAll(ListView):
+    models = Order
+    def get_queryset(self):
+        return Order.objects.all()
+
 def UserViewSelf(request):
     user = request.user
     userext = UserExt.objects.get(user = request.user)
