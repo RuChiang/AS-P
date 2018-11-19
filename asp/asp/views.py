@@ -68,7 +68,12 @@ def viewWarehouseProcessing(request):
         order.time_processing = timezone.now()
         order.save()
 
-        return render(request, 'asp/warehouseProcessing.html', {'order_to_display': order})
+        items = Ordered_Item.objects.filter(order_id=order_id)
+
+        for item in items:
+            print(item.item.name)
+
+        return render(request, 'asp/warehouseProcessing.html', {'order_to_display': order, 'items': items})
     else:
         return HttpResponse('No Permission', status = 403)
 
