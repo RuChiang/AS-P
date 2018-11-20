@@ -159,6 +159,8 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order_id:{self.id} | Priority: {self.priority} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time_queued_processing}"
+        # DEBUG:  for seeing the total weight of the order
+        # return f"Order_id:{self.id} | Priority: {self.priority} | Requester: {self.requester.user.username} | Status: {self.status} | Order_placed_at: {self.time_queued_processing} | Total_weight: {self.getTotalWeightRounded()}"
 
 
 class Ordered_Item(models.Model):

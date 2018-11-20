@@ -49,7 +49,7 @@ def downloadShippingLabel(request):
         count += 1
     textObject.textLine("")
     textObject.setFont('Times-Bold', 16)
-    textObject.textLine("Destination Hospital: ")
+    textObject.textLine("Name: ")
     textObject.setFont('Times-Roman', 12)
     textObject.textLine('        ' + str(order.requester.hospital.name))
     p.drawText(textObject)
@@ -69,10 +69,9 @@ def viewWarehouseProcessing(request):
         order.save()
 
         items = Ordered_Item.objects.filter(order_id=order_id)
-
-        for item in items:
-            print(item.item.name)
-
+        # DEBUG
+        # for item in items:
+            # print(item.item.name)
         return render(request, 'asp/warehouseProcessing.html', {'order_to_display': order, 'items': items})
     else:
         return HttpResponse('No Permission', status = 403)
@@ -291,12 +290,12 @@ def viewDispatch(request):
 
             for count, order in enumerate(ordersToDispatch):
                 # 1.2 being the weight of the container
+                if sum_weight + order.getTotalWeight() + 1.2 > weight_limit:
+                    continue
                 sum_weight += (order.getTotalWeight() + 1.2)
-                if sum_weight > weight_limit:
-                    break
                 destination_hospitals.append(UserExt.objects.get(id = order.requester.id).hospital)
                 orders_to_dispatch_in_this_go.append(order)
-
+            # print(f"sum weight {sum_weight}")
             # weird assumption: getting the supplying_hospital from anyone(the first in this case)
             # of the orders cuz it's the same for all of the orders
             destination_hospitals.append(Hospital.objects.get(name = utils.getSupplyingHospital(ordersToDispatch[0])))
