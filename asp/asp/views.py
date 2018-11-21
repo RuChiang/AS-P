@@ -22,6 +22,12 @@ from reportlab.lib.units import cm
 from django.db.models import Q
 # Create your views here.
 
+def homePage(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
+    route = utils.redirect_to_homepage(request.user)
+    return redirect(route)
+
 def cancelOrder(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
