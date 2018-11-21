@@ -19,7 +19,17 @@ from django.core.mail import send_mail
 from django.conf import settings
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
+from django.db.models import Q
 # Create your views here.
+
+def viewAndTrackOrder(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
+    if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
+        ordersNotYetDelivered = Order.objects.filter(Q(status = 'QFP') | Q(status = 'PBW') | Q(status = 'QFD') | Q(status = 'DSD')).filter(requester = UserExt.objects.get(user = request.user).id)
+        return render(request, 'asp/Track.html', {'orders': ordersNotYetDelivered})
+    else:
+        return HttpResponse('No Permission', status = 403)
 
 def manageAccount(request):
     if not request.user.is_authenticated:

@@ -1,0 +1,14 @@
+{% extends "asp/header.html" %}
+{% block content %}
+<h1>Order Viewing and Tracking</h1>
+<h4>Here you can see your orders that have not yet been delivered</h4>
+<ul>
+    {% for order in orders %}
+        <li>
+            <p>
+                {{ order }}
+            </p>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}
