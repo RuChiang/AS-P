@@ -19,6 +19,7 @@ urlpatterns = [
     # clinic manager routes
     path('marketplace', views.marketPlace, name='marketplace'),
     path('viewAndTrackOrder', views.viewAndTrackOrder, name='viewAndTrackOrder'),
+    path('cancelOrder', views.cancelOrder, name='cancelOrder'),
 
     # dispatcher routes
     path('viewDispatch', views.viewDispatch, name='viewDispatch'),

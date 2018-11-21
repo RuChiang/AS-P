@@ -22,6 +22,18 @@ from reportlab.lib.units import cm
 from django.db.models import Q
 # Create your views here.
 
+def cancelOrder(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
+    if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
+        if request.method == 'POST':
+            order_id = request.POST['Order_ID']
+            order = Order.objects.get(id = order_id)
+            order.delete()
+        return redirect('viewAndTrackOrder')
+    else:
+        return HttpResponse('No Permission', status = 403)
+
 def viewAndTrackOrder(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)

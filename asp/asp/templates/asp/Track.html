@@ -7,6 +7,13 @@
         <li>
             <p>
                 {{ order }}
+                {% if order.status == "QFP" %}
+                    <form action="/asp/cancelOrder" method="post">
+                        {% csrf_token %}
+                        <input type="submit" value="Cancel">
+                        <input type="hidden" name="Order_ID" value="{{order.id}}">
+                    </form>
+                {% endif %}
             </p>
         </li>
     {% endfor %}
