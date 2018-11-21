@@ -14,6 +14,7 @@ urlpatterns = [
     path('resetPassword/<str:encrypted_pk>', views.resetPassword, name='resetPassword'),
     path(r'activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
     views.activate, name='activate'),
+    path('manageAccount', views.manageAccount, name='manageAccount'),
 
     # clinic manager routes
     path('marketplace', views.marketPlace, name='marketplace'),
@@ -32,7 +33,7 @@ urlpatterns = [
     path('addUser', views.addUser, name='addUser'),
 
     # debugging routes
-    path('orders', views.OrdersViewAll.as_view(), name='orders'),    
+    path('orders', views.OrdersViewAll.as_view(), name='orders'),
     path('items', views.ItemsViewAll.as_view(), name='items'),
     path('self', views.UserViewSelf, name='self'),
 ]

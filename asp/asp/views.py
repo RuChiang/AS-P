@@ -4,7 +4,7 @@ from asp.models import Item, Order, Ordered_Item, UserExt, Hospital, Available_I
 from django.http import HttpResponse
 from django.contrib.auth.models import Permission
 from django.utils import timezone
-from asp.forms import SignupForm, LoginForm, AddUser , GetPassword, ResetPassword, ClinicManagerSignupForm
+from asp.forms import SignupForm, LoginForm, AddUser , GetPassword, ResetPassword, ClinicManagerSignupForm, ManageAccout
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from asp import utils
@@ -20,6 +20,31 @@ from django.conf import settings
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 # Create your views here.
+
+def manageAccount(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('No Permission', status = 403)
+    if request.method == 'POST':
+        form = ManageAccout(request.POST)
+        if form.is_valid():
+            for key in form.cleaned_data:
+                if key != 'password':
+                    if form.cleaned_data[key] != '':
+                        print(f"setting the attr {key} from {getattr(request.user, key)} to {form.cleaned_data[key]}")
+                        setattr(request.user, key, form.cleaned_data[key])
+                else:
+                    if form.cleaned_data['password'] != '':
+                        request.user.set_password(form.cleaned_data['password'])
+            request.user.save()
+            login(request, request.user)
+        route = utils.redirect_to_homepage(request.user)
+        return redirect(route)
+    elif request.method == 'GET':
+        form = ManageAccout()
+        return render(request, 'asp/manage_account.html', {'form': form})
+    else:
+        return HttpResponse("how did you even got here?")
+
 
 def downloadShippingLabel(request):
     order = Order.objects.get(id = int(request.GET['order_id']))
@@ -137,15 +162,8 @@ def loginView(request):
             user = authenticate(username = username, password=password)
             if user is not None:
                 login(request, user)
-                userext=UserExt.objects.get(user=user)
-                if userext.role == 'CM':
-                    return redirect(f"/asp/marketplace")
-                elif userext.role == 'DP':
-                    return redirect(f"/asp/viewDispatch")
-                elif userext.role == 'WP':
-                    return redirect(f"/asp/viewWarehouse")
-                else:
-                    return HttpResponse("logged in!!")
+                route = utils.redirect_to_homepage(user)
+                return redirect(route)
             else:
                 return HttpResponse("No such user")
 

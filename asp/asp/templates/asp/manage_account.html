@@ -1,0 +1,10 @@
+{% extends "asp/header.html" %}
+{% block content %}
+<form action="/asp/manageAccount" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <br>
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}

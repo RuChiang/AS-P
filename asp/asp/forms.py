@@ -33,3 +33,9 @@ class GetPassword(forms.Form):
 
 class ResetPassword(forms.Form):
     password = forms.CharField(label='password', max_length = 32, widget=forms.PasswordInput)
+
+class ManageAccout(forms.Form):
+    email_address = forms.EmailField(max_length = 254, required=False)
+    first_name = forms.CharField(label='first_name', max_length = 50, required=False)
+    last_name = forms.CharField(label='last_name', max_length = 50, required=False)
+    password = forms.CharField(label='password', max_length = 32, widget=forms.PasswordInput, required=False)

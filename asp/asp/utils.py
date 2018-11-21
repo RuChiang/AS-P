@@ -2,6 +2,14 @@ from asp.models import Category, Item, UserExt, Ordered_Item, Available_Item, Di
 import csv
 import itertools
 
+def redirect_to_homepage(user):
+    userext=UserExt.objects.get(user=user)
+    if userext.role == 'CM':
+        return f"/asp/marketplace"
+    elif userext.role == 'DP':
+        return f"/asp/viewDispatch"
+    elif userext.role == 'WP':
+        return f"/asp/viewWarehouse"
 
 
 def arrange_items_by_category(logged_in_user):
