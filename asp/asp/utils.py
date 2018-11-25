@@ -1,6 +1,8 @@
 from asp.models import Category, Item, UserExt, Ordered_Item, Available_Item, Distance, Hospital, Order
 import csv
 import itertools
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import cm
 
 def redirect_to_homepage(user):
     userext=UserExt.objects.get(user=user)
@@ -136,3 +138,31 @@ def generateItinerary(listOfHospitals, ordersToDispatch):
 
 def generateShippingData(ordersToProcess):
     return [ item for item in Ordered_Item.objects.filter(order_id = ordersToProcess.id)]
+
+def generateShippingLabel(filename, order, shippingData):
+    order.shipping_label_name = filename
+    order.save()
+    p = canvas.Canvas(filename)
+    textObject = p.beginText()
+    textObject.setTextOrigin(2*cm, 27*cm)
+    textObject.setFont('Times-Bold', 25)
+    textObject.textLine("Shipping label ")
+    textObject.setFont('Times-Bold', 16)
+    textObject.textLine("Order number: " + str(order.id))
+    textObject.setFont('Times-Roman', 8)
+    textObject.textLine("")
+    textObject.setFont('Times-Bold', 16)
+    textObject.textLine("Contents: ")
+    textObject.setFont('Times-Roman', 12)
+    count = 1
+    for item in shippingData:
+        textObject.textLine('        ' + str(count) + '. ' + str(item.item.name))
+        textObject.textLine('        ' + '        ' + " - Quantity: " + str(item.quantity))
+        count += 1
+    textObject.textLine("")
+    textObject.setFont('Times-Bold', 16)
+    textObject.textLine("Name: ")
+    textObject.setFont('Times-Roman', 12)
+    textObject.textLine('        ' + str(order.requester.hospital.name))
+    p.drawText(textObject)
+    p.save()
