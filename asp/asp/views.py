@@ -17,8 +17,9 @@ from django.utils.encoding import force_bytes
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import cm
+from django.core.mail import EmailMessage
+
+
 from django.db.models import Q
 # Create your views here.
 
@@ -77,36 +78,13 @@ def manageAccount(request):
 def downloadShippingLabel(request):
     order = Order.objects.get(id = int(request.GET['order_id']))
     shippingData = utils.generateShippingData(order)
+    path_to_file = 'asp/media/shipping_labels/'
+    filename = 'shipping_label_' + str(order.id) + '.pdf'
+    utils.generateShippingLabel(path_to_file + filename, order,shippingData)
+    file = open(path_to_file + filename, 'rb')
+    response = HttpResponse(file,content_type='application/pdf')
+    response['Content-Disposition'] = f"attachment; filename={filename}"
 
-    #Define file type to create i.e. pdf
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="shipping_label_' + str(order.id) + '.pdf"'
-
-    #This is where we throw all the necessary info about the order into
-    p = canvas.Canvas(response)
-    textObject = p.beginText()
-    textObject.setTextOrigin(2*cm, 27*cm)
-    textObject.setFont('Times-Bold', 25)
-    textObject.textLine("Shipping label ")
-    textObject.setFont('Times-Bold', 16)
-    textObject.textLine("Order number: " + str(order.id))
-    textObject.setFont('Times-Roman', 8)
-    textObject.textLine("")
-    textObject.setFont('Times-Bold', 16)
-    textObject.textLine("Contents: ")
-    textObject.setFont('Times-Roman', 12)
-    count = 1
-    for item in shippingData:
-        textObject.textLine('        ' + str(count) + '. ' + str(item.item.name))
-        textObject.textLine('        ' + '        ' + " - Quantity: " + str(item.quantity))
-        count += 1
-    textObject.textLine("")
-    textObject.setFont('Times-Bold', 16)
-    textObject.textLine("Name: ")
-    textObject.setFont('Times-Roman', 12)
-    textObject.textLine('        ' + str(order.requester.hospital.name))
-    p.drawText(textObject)
-    p.save()
     return response
 
 
@@ -352,6 +330,19 @@ def viewDispatch(request):
                     order.status = 'DSD'
                     order.time_dispatched = timezone.now()
                     order.save()
+                    user = order.requester.user
+                    mail_subject = 'Your Order has been dispatched'
+                    message = render_to_string('order_dispatched_email.html', {
+                        'user': user,
+                    })
+                    email = EmailMessage(
+                        mail_subject,
+                        message,
+                        settings.EMAIL_HOST_USER,
+                        [user.email],
+                    )
+                    email.attach_file(order.shipping_label_name)
+                    email.send()
                 return redirect('/asp/viewDispatch')
 
             vertices = list()

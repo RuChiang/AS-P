@@ -141,6 +141,8 @@ class Order(models.Model):
     time_dispatched = models.DateTimeField(null = True, blank = True)
     time_delivered = models.DateTimeField(null = True, blank = True)
 
+    shipping_label_name = models.CharField(max_length = 200, null = True, blank = True)
+
     def getTotalWeight(self):
         weight_list = []
         # ID of all ordered items from current order
