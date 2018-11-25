@@ -22,6 +22,8 @@ urlpatterns = [
     path('marketplace', views.marketPlace, name='marketplace'),
     path('viewAndTrackOrder', views.viewAndTrackOrder, name='viewAndTrackOrder'),
     path('cancelOrder', views.cancelOrder, name='cancelOrder'),
+    path('delivery', views.delivery, name='delivery'),
+
 
     # dispatcher routes
     path('viewDispatch', views.viewDispatch, name='viewDispatch'),
@@ -29,7 +31,6 @@ urlpatterns = [
 
     # warehouse routes
     path('downloadShippingLabel', views.downloadShippingLabel, name='downloadShippingLabel'),
-    path('delivery', views.delivery, name='delivery'),
     path('viewWarehouse', views.viewWarehouse, name='viewWarehouse'),
     path('viewWarehouseProcessing', views.viewWarehouseProcessing, name='viewWarehouseProcessing'),
 

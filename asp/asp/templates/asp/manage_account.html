@@ -1,5 +1,7 @@
 {% extends "asp/header.html" %}
 {% block content %}
+<h1>Manage your account</h1>
+<h4>Change your account details here</h4>
 <form action="/asp/manageAccount" method="post">
     {% csrf_token %}
     {{ form }}

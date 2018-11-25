@@ -46,7 +46,7 @@ def viewAndTrackOrder(request):
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
         ordersNotYetDelivered = Order.objects.filter(Q(status = 'QFP') | Q(status = 'PBW') | Q(status = 'QFD') | Q(status = 'DSD')).filter(requester = UserExt.objects.get(user = request.user).id)
-        return render(request, 'asp/Track.html', {'orders': ordersNotYetDelivered})
+        return render(request, 'asp/view_and_track_order.html', {'orders': ordersNotYetDelivered})
     else:
         return HttpResponse('No Permission', status = 403)
 
