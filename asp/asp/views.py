@@ -111,10 +111,6 @@ def viewWarehouse(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
-        # if there are undergoing processed order, redirect the warehouse guy straight to the viewWarehouseProcessing page
-        pickPackNotDone = Order.objects.filter(status = 'PBW').filter(processed_by = UserExt.objects.get(user = request.user))
-        if len(pickPackNotDone) != 0:
-            return redirect(f"/asp/viewWarehouseProcessing/{pickPackNotDone[0].id}")
         ordersToPickPack = Order.objects.filter(status = 'QFP').order_by('-priority', 'time_queued_processing')
         if request.method == 'GET':
             if len(request.GET) != 0:
@@ -124,6 +120,11 @@ def viewWarehouse(request):
                 order.status = 'QFD'
                 order.time_queued_dispatch = timezone.now()
                 order.save()
+            else:
+                # if there are undergoing processed order, redirect the warehouse guy straight to the viewWarehouseProcessing page
+                pickPackNotDone = Order.objects.filter(status = 'PBW').filter(processed_by = UserExt.objects.get(user = request.user))
+                if len(pickPackNotDone) != 0:
+                    return redirect(f"/asp/viewWarehouseProcessing/{pickPackNotDone[0].id}")
             #TODO: order_to_pickpack will break if there is no item
         return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack, 'first_order': (ordersToPickPack[0].id if len(ordersToPickPack) > 0 else -1) })
     else:
