@@ -128,7 +128,8 @@ class Order(models.Model):
         default = QUEUED_FOR_PROCESSING
     )
 
-    requester = models.ForeignKey(UserExt, on_delete = models.CASCADE)
+    requester = models.ForeignKey(UserExt, on_delete = models.CASCADE, related_name = 'requested_by')
+    processed_by = models.ForeignKey(UserExt, on_delete = models.CASCADE, null = True, blank = True, related_name = 'processed_by')
     # 1 being LOW and 3 being HIGH
     priority = models.PositiveIntegerField(
         choices = PRIORITY,

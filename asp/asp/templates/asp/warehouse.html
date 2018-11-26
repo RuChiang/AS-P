@@ -16,8 +16,7 @@
 
 {% if orders|length > 0 %}
 
-<form action="/asp/viewWarehouseProcessing" method="get">
-   <input type="hidden" name="order_id" value="{{ first_order }}">
+<form action="/asp/viewWarehouseProcessing/{{ first_order }}" method="get">
    <input type="submit" value="Begin picking and packing">
 </form>
 

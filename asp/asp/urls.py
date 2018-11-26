@@ -32,7 +32,7 @@ urlpatterns = [
     # warehouse routes
     path('downloadShippingLabel', views.downloadShippingLabel, name='downloadShippingLabel'),
     path('viewWarehouse', views.viewWarehouse, name='viewWarehouse'),
-    path('viewWarehouseProcessing', views.viewWarehouseProcessing, name='viewWarehouseProcessing'),
+    path('viewWarehouseProcessing/<int:order_id>', views.viewWarehouseProcessing, name='viewWarehouseProcessing'),
 
     # admin routes
     path('addUser', views.addUser, name='addUser'),
