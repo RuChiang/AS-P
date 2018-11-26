@@ -92,18 +92,14 @@ def viewWarehouseProcessing(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
-        if request.method=='GET':
-            if len(request.GET) != 0:
-                order_id = int(request.GET['order_id'])
-                order = Order.objects.get(id=order_id)
-                order.processing_by = request.user.pk
-            else:
-                order = Order.objects.get(processing_by=request.user.pk)
-            order.status = 'PBW'
-            order.time_processing = timezone.now()
-            order.save()
-            items = Ordered_Item.objects.filter(order_id=order.id)
 
+        order_id = int(request.GET['order_id'])
+        order = Order.objects.get(id= order_id)
+        order.status = 'PBW'
+        order.time_processing = timezone.now()
+        order.save()
+
+        items = Ordered_Item.objects.filter(order_id=order_id)
         # DEBUG
         # for item in items:
             # print(item.item.name)
@@ -114,25 +110,16 @@ def viewWarehouseProcessing(request):
 def viewWarehouse(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
-    if UserExt.objects.get(user=request.user).is_permitted_to_access('WP'):
-        #personnel = UserExt.objects.get(user=request.user)
-
-
-        ordersToPickPack = Order.objects.filter(status='QFP').order_by('-priority', 'time_queued_processing')
+    if UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
+        ordersToPickPack = Order.objects.filter(status = 'QFP').order_by('-priority', 'time_queued_processing')
         if request.method == 'GET':
             if len(request.GET) != 0:
                 # update the status of the specified order to queue for dispatch
                 order_id = int(request.GET['order_id'])
                 order = Order.objects.get(id= order_id)
                 order.status = 'QFD'
-                order.processing_by=0
                 order.time_queued_dispatch = timezone.now()
                 order.save()
-            else:
-                haveOrdersToprocess = Order.objects.get(processing_by=request.user.pk)
-                if haveOrdersToprocess:
-                    return redirect('/asp/viewWarehouseProcessing')
-
 
             #TODO: order_to_pickpack will break if there is no item
         return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack, 'first_order': (ordersToPickPack[0].id if len(ordersToPickPack) > 0 else -1) })

@@ -41,7 +41,6 @@ class UserExt(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, null = True, blank = True, related_name='working_hospital')
     resetPassword = models.BooleanField(default=False)
-
     role = models.CharField(
         max_length = 2,
         choices = ROLES,
@@ -129,8 +128,7 @@ class Order(models.Model):
         default = QUEUED_FOR_PROCESSING
     )
 
-    requester = models.ForeignKey(UserExt, on_delete=models.CASCADE)
-    processing_by = models.PositiveIntegerField(default=0)
+    requester = models.ForeignKey(UserExt, on_delete = models.CASCADE)
     # 1 being LOW and 3 being HIGH
     priority = models.PositiveIntegerField(
         choices = PRIORITY,
