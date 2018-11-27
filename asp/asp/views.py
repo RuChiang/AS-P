@@ -363,6 +363,23 @@ def viewDispatch(request):
                     )
                     email.attach_file(order.shipping_label_name)
                     email.send()
+                # Send email to dispatch personnel
+                mail_subject = 'Itinerary of dispatch'
+                message = render_to_string('itinerary_email.html', {
+                    'user': request.user,
+                })
+                email = EmailMessage(
+                    mail_subject,
+                    message,
+                    settings.EMAIL_HOST_USER,
+                    [request.user.email],
+                )
+                filePath = default_storage.path('itinerary')
+                if not default_storage.exists('itinerary'):
+                    os.mkdir(filePath)
+                filePath += '/itinerary.csv'
+                email.attach_file(filePath)
+                email.send()
                 return redirect('/asp/viewDispatch')
 
             vertices = list()
