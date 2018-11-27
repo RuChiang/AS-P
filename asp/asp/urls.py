@@ -10,17 +10,17 @@ urlpatterns = [
     path('login', views.loginView, name='login'),
     path('signup/<str:encrypted_pk>', views.signupView, name='signup'),
     path('logout', views.logoutView, name='logout'),
-    path('forgotPassword', views.forgotPassword, name='forgotPassword'),
-    path('resetPassword/<str:encrypted_pk>', views.resetPassword, name='resetPassword'),
+    path('forgotPassword', views.forgot_password, name='forgotPassword'),
+    path('resetPassword/<str:encrypted_pk>', views.reset_password, name='resetPassword'),
     path(r'activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
     views.activate, name='activate'),
-    path('manageAccount', views.manageAccount, name='manageAccount'),
+    path('manageAccount', views.manage_account, name='manageAccount'),
     path('homePage', views.homePage, name='homePage'),
 
 
     # clinic manager routes
-    path('marketPlace', views.marketPlace, name='marketPlace'),
-    path('viewAndTrackOrder', views.viewAndTrackOrder, name='viewAndTrackOrder'),
+    path('marketPlace', views.market_place, name='marketPlace'),
+    path('viewAndTrackOrder', views.view_and_track_order, name='viewAndTrackOrder'),
     path('cancelOrder', views.cancelOrder, name='cancelOrder'),
     path('delivery', views.delivery, name='delivery'),
 
@@ -32,10 +32,11 @@ urlpatterns = [
     # warehouse routes
     path('downloadShippingLabel', views.downloadShippingLabel, name='downloadShippingLabel'),
     path('viewWarehouse', views.viewWarehouse, name='viewWarehouse'),
-    path('viewWarehouseProcessing/<int:order_id>', views.viewWarehouseProcessing, name='viewWarehouseProcessing'),
+    path('viewWarehouseProcessing/<int:order_id>', views.view_warehouse_processing, 
+    name='viewWarehouseProcessing'),
 
     # admin routes
-    path('addUser', views.addUser, name='addUser'),
+    path('addUser', views.add_user, name='addUser'),
 
     # debugging routes
     path('orders', views.OrdersViewAll.as_view(), name='orders'),

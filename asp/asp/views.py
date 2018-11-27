@@ -37,20 +37,20 @@ def cancelOrder(request):
             order_id = request.POST['Order_ID']
             order = Order.objects.get(id = order_id)
             order.delete()
-        return redirect('viewAndTrackOrder')
+        return redirect('/asp/viewAndTrackOrder')
     else:
         return HttpResponse('No Permission', status = 403)
 
-def viewAndTrackOrder(request):
+def view_and_track_order(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
         ordersNotYetDelivered = Order.objects.filter(Q(status = 'QFP') | Q(status = 'PBW') | Q(status = 'QFD') | Q(status = 'DSD')).filter(requester = UserExt.objects.get(user = request.user).id)
-        return render(request, 'asp/viewAndTrackOrder.html', {'orders': ordersNotYetDelivered})
+        return render(request, 'asp/view_and_track_order.html', {'orders': ordersNotYetDelivered})
     else:
         return HttpResponse('No Permission', status = 403)
 
-def manageAccount(request):
+def manage_account(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if request.method == 'POST':
@@ -71,13 +71,13 @@ def manageAccount(request):
     elif request.method == 'GET':
         form = ManageAccountForm()
         if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
-            return render(request, 'asp/manageAccountCM.html', {'form': form})
+            return render(request, 'asp/manage_account_CM.html', {'form': form})
         elif UserExt.objects.get(user = request.user).is_permitted_to_access('WP'): 
-            return render(request, 'asp/manageAccountWP.html', {'form': form})
+            return render(request, 'asp/manage_account_WP.html', {'form': form})
         elif UserExt.objects.get(user = request.user).is_permitted_to_access('DP'):
-            return render(request, 'asp/manageAccountDP.html', {'form': form})
+            return render(request, 'asp/manage_account_DP.html', {'form': form})
         else:
-            return render(request, 'asp/manageAccount.html', {'form': form})
+            return render(request, 'asp/manage_account.html', {'form': form})
     else:
         return HttpResponse("how did you even get here?")
 
@@ -99,7 +99,7 @@ def downloadShippingLabel(request):
     return response
 
 
-def viewWarehouseProcessing(request, order_id):
+def view_warehouse_processing(request, order_id):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
@@ -114,7 +114,7 @@ def viewWarehouseProcessing(request, order_id):
         # DEBUG
         # for item in items:
             # print(item.item.name)
-        return render(request, 'asp/warehouseProcessing.html', {'order_to_display': order, 'items': items})
+        return render(request, 'asp/warehouse_processing.html', {'order_to_display': order, 'items': items})
     else:
         return HttpResponse('No Permission', status = 403)
 
@@ -259,7 +259,7 @@ def signupView(request, encrypted_pk):
     else:
         return HttpResponse("Getting here using neither POST nor GET")
 
-def marketPlace(request):
+def market_place(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
@@ -269,7 +269,7 @@ def marketPlace(request):
         if request.method == 'GET':
             # see if this is simply routing
             if len(request.GET) == 0:
-                return render(request, 'asp/marketPlace.html', {'item_list':items })
+                return render(request, 'asp/market_place.html', {'item_list':items })
             # extract the order details into the order dict
             req_priority = 1
             for item in request.GET:
@@ -289,12 +289,12 @@ def marketPlace(request):
                     supplying_hospital = orders_item_supplying_hospital
                     ).is_enough(orders_items[orders_item]):
                     msg = "no enough stock in " + str(orders_item) + " please place your order again"
-                    return render(request, 'asp/marketPlace.html', {'err':msg, 'item_list':items })
+                    return render(request, 'asp/market_place.html', {'err':msg, 'item_list':items })
             # no order placed and click placeOrder
             all_zero_order =  True if all(v == 0 for v in orders_items.values()) else False
             if all_zero_order:
                 msg = "Please input values for those supplies which you would like to order"
-                return render(request, 'asp/marketPlace.html', {'warning':msg, 'item_list':items })
+                return render(request, 'asp/market_place.html', {'warning':msg, 'item_list':items })
 
             Order_model = Order(status='QFP', requester=UserExt.objects.get(user = request.user), time_queued_processing=timezone.now(), priority=req_priority)
             Order_model.save()
@@ -314,7 +314,7 @@ def marketPlace(request):
 
 
             msg = f"order successfully placed. Order id is, {Order_model.id}"
-            return render(request, 'asp/marketPlace.html', {'success':msg, 'item_list':items })
+            return render(request, 'asp/market_place.html', {'success':msg, 'item_list':items })
 
         else:
             return HttpResponse("requested with invalid method")
@@ -394,7 +394,7 @@ def viewDispatch(request):
     else:
         return HttpResponse('No Permission', status = 403)
 
-def addUser(request):
+def add_user(request):
     if not request.user.is_superuser:
         return HttpResponse("no Permission", status = 403)
     if request.method == 'POST':
@@ -430,7 +430,7 @@ def addUser(request):
         return HttpResponse('Email token has been sent')
     else:
         form = AddUser()
-    return render(request, 'asp/addUser.html', {'form': form})
+    return render(request, 'asp/add_user.html', {'form': form})
 
 def activate(request, uidb64, token):
     try:
@@ -441,9 +441,9 @@ def activate(request, uidb64, token):
     if account_creation_token.check_token(user, token):
         resetuser = UserExt.objects.get(user=user)
         # print(resetuser)
-        # print(resetuser.resetPassword)
-        if resetuser.resetPassword:
-            resetuser.resetPassword = False
+        # print(resetuser.reset_password)
+        if resetuser.reset_password:
+            resetuser.reset_password = False
             resetuser.save()
             return redirect(f"/asp/resetPassword/{uidb64}")
         elif user.is_active == False :
@@ -455,7 +455,7 @@ def activate(request, uidb64, token):
     else:
         return HttpResponse('Invalid token')
 
-def forgotPassword(request):
+def forgot_password(request):
     if(request.method == 'POST'):
         form = GetPassword(request.POST or None, request.FILES or None)
         if form.is_valid():
@@ -466,9 +466,9 @@ def forgotPassword(request):
             except(TypeError, ValueError, OverflowError, User.DoesNotExist):
                 return HttpResponse('user not found', status=404)
 
-            resetuser.resetPassword = True
+            resetuser.reset_password = True
             resetuser.save()
-            # print(resetuser.resetPassword)
+            # print(resetuser.reset_password)
             current_site = get_current_site(request)
             mail_subject = 'Reset Password'
             message = render_to_string('reset_password_email.html', {
@@ -490,10 +490,10 @@ def forgotPassword(request):
             return HttpResponse("wrong" + str(form.errors))
     else:
         form = GetPassword()
-    return render(request, 'asp/forgotPassword.html', {'form': form})
+    return render(request, 'asp/forgot_password.html', {'form': form})
 
 
-def resetPassword(request, encrypted_pk):
+def reset_password(request, encrypted_pk):
     try:
         uid = urlsafe_base64_decode(encrypted_pk).decode()
         user = User.objects.get(pk=uid)
@@ -510,7 +510,7 @@ def resetPassword(request, encrypted_pk):
             return HttpResponse("wrong" + str(form.errors))
     else:
         form = ResetPassword()
-    return render(request, "asp/resetPassword.html", {'form':form, 'PK':encrypted_pk})
+    return render(request, "asp/reset_password.html", {'form':form, 'PK':encrypted_pk})
 
 
 ''' functions below are for debug uses '''
@@ -533,4 +533,4 @@ def UserViewSelf(request):
     items.append(userext.hospital.name)
     items.append(userext.role)
     # print(items)
-    return render(request, 'asp/userShowSelf.html', {'item_list':items})
+    return render(request, 'asp/user_show_self.html', {'item_list':items})
