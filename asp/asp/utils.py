@@ -3,11 +3,12 @@ import csv
 import itertools
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
+from django.conf import settings
 
 def redirect_to_homepage(user):
     userext=UserExt.objects.get(user=user)
     if userext.role == 'CM':
-        return f"/asp/marketplace"
+        return f"/asp/marketPlace"
     elif userext.role == 'DP':
         return f"/asp/viewDispatch"
     elif userext.role == 'WP':
@@ -33,7 +34,7 @@ def transform_priority_to_integer(priority):
     return req_priority
 
 def generateCSV(content):
-    path_to_file = 'asp/static/asp/itinerary.csv'
+    path_to_file = settings.STATIC_URL + 'asp/itinerary.csv'
     with open(path_to_file, 'w') as csvFile:
         writer = csv.writer(csvFile)
         writer.writerows(content)

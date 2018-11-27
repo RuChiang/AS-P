@@ -4,11 +4,10 @@ from asp.models import Item, Order, Ordered_Item, UserExt, Hospital, Available_I
 from django.http import HttpResponse
 from django.contrib.auth.models import Permission
 from django.utils import timezone
-from asp.forms import SignupForm, LoginForm, AddUser , GetPassword, ResetPassword, ClinicManagerSignupForm, ManageAccout
+from asp.forms import SignupForm, LoginForm, AddUser , GetPassword, ResetPassword, ClinicManagerSignupForm, ManageAccountForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from asp import utils
-import os
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from asp.tokens import account_creation_token
@@ -18,7 +17,8 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.mail import EmailMessage
-
+from django.core.files.storage import default_storage
+import os
 
 from django.db.models import Q
 # Create your views here.
@@ -46,7 +46,7 @@ def viewAndTrackOrder(request):
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
         ordersNotYetDelivered = Order.objects.filter(Q(status = 'QFP') | Q(status = 'PBW') | Q(status = 'QFD') | Q(status = 'DSD')).filter(requester = UserExt.objects.get(user = request.user).id)
-        return render(request, 'asp/view_and_track_order.html', {'orders': ordersNotYetDelivered})
+        return render(request, 'asp/viewAndTrackOrder.html', {'orders': ordersNotYetDelivered})
     else:
         return HttpResponse('No Permission', status = 403)
 
@@ -54,7 +54,7 @@ def manageAccount(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if request.method == 'POST':
-        form = ManageAccout(request.POST)
+        form = ManageAccountForm(request.POST)
         if form.is_valid():
             for key in form.cleaned_data:
                 if key != 'password':
@@ -69,19 +69,26 @@ def manageAccount(request):
         route = utils.redirect_to_homepage(request.user)
         return redirect(route)
     elif request.method == 'GET':
-        form = ManageAccout()
-        return render(request, 'asp/manage_account.html', {'form': form})
+        form = ManageAccountForm()
+        if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
+            return render(request, 'asp/manageAccountCM.html', {'form': form})
+        else:
+            return render(request, 'asp/manageAccount.html', {'form': form})
     else:
-        return HttpResponse("how did you even got here?")
+        return HttpResponse("how did you even get here?")
 
 
 def downloadShippingLabel(request):
     order = Order.objects.get(id = int(request.GET['order_id']))
     shippingData = utils.generateShippingData(order)
-    path_to_file = 'asp/media/shipping_labels/'
+    folderPath = default_storage.path('shippingLabels')
+    if not default_storage.exists('shippingLabels'):
+        os.mkdir(folderPath)
+    folderPath += '/'
     filename = 'shipping_label_' + str(order.id) + '.pdf'
-    utils.generateShippingLabel(path_to_file + filename, order,shippingData)
-    file = open(path_to_file + filename, 'rb')
+    print(folderPath + filename)
+    utils.generateShippingLabel(folderPath + filename, order,shippingData)
+    file = open(folderPath + filename, 'rb')
     response = HttpResponse(file,content_type='application/pdf')
     response['Content-Disposition'] = f"attachment; filename={filename}"
 
@@ -149,7 +156,7 @@ def delivery(request):
         return HttpResponse('No Permission', status = 403)
 
 def downloadItinerary(request):
-    file = open('asp/static/asp/itinerary.csv', 'rb')
+    file = open(settings.STATIC_URL + 'asp/itinerary.csv', 'rb')
     response = HttpResponse(content=file,content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="itinerary.csv"'
     return response
@@ -187,7 +194,7 @@ def loginView(request):
         return render(request, 'asp/login.html', {'form':form})
     # # dunno which HTTP method its using
     else:
-        return HttpResponse("how did you even got here?")
+        return HttpResponse("how did you even get here?")
 
 
 def signupView(request, encrypted_pk):
@@ -253,7 +260,7 @@ def marketPlace(request):
         if request.method == 'GET':
             # see if this is simply routing
             if len(request.GET) == 0:
-                return render(request, 'asp/marketplace.html', {'item_list':items })
+                return render(request, 'asp/marketPlace.html', {'item_list':items })
             # extract the order details into the order dict
             req_priority = 1
             for item in request.GET:
@@ -273,12 +280,12 @@ def marketPlace(request):
                     supplying_hospital = orders_item_supplying_hospital
                     ).is_enough(orders_items[orders_item]):
                     msg = "no enough stock in " + str(orders_item) + " please place your order again"
-                    return render(request, 'asp/marketplace.html', {'err':msg, 'item_list':items })
+                    return render(request, 'asp/marketPlace.html', {'err':msg, 'item_list':items })
             # no order placed and click placeOrder
             all_zero_order =  True if all(v == 0 for v in orders_items.values()) else False
             if all_zero_order:
                 msg = "Please input values for those supplies which you would like to order"
-                return render(request, 'asp/marketplace.html', {'warning':msg, 'item_list':items })
+                return render(request, 'asp/marketPlace.html', {'warning':msg, 'item_list':items })
 
             Order_model = Order(status='QFP', requester=UserExt.objects.get(user = request.user), time_queued_processing=timezone.now(), priority=req_priority)
             Order_model.save()
@@ -298,7 +305,7 @@ def marketPlace(request):
 
 
             msg = f"order successfully placed. Order id is, {Order_model.id}"
-            return render(request, 'asp/marketplace.html', {'success':msg, 'item_list':items })
+            return render(request, 'asp/marketPlace.html', {'success':msg, 'item_list':items })
 
         else:
             return HttpResponse("requested with invalid method")
@@ -368,8 +375,8 @@ def addUser(request):
         form = AddUser(request.POST or None, request.FILES or None)
         if form.is_valid():
             # try to create a user here
-            to_email = form.cleaned_data['email']
-            user = User.objects.create_user(to_email,to_email,to_email)
+            toEmail = form.cleaned_data['email']
+            user = User.objects.create_user(toEmail,toEmail,toEmail)
             user.is_active = False
             # print(f"adding the user with id {user.pk}")
             user.save()
@@ -387,12 +394,12 @@ def addUser(request):
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
                 'token': account_creation_token.make_token(user),
             })
-            # print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {to_email}")
+            # print(f"mail_subject: {mail_subject}\n message: {message}\ntoEmail: {toEmail}")
             send_mail(
                 mail_subject,
                 message,
                 settings.EMAIL_HOST_USER,
-                [to_email],
+                [toEmail],
             )
         return HttpResponse('Email token has been sent')
     else:
@@ -444,7 +451,7 @@ def forgotPassword(request):
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
                 'token': account_creation_token.make_token(user),
             })
-            # print(f"mail_subject: {mail_subject}\n message: {message}\nto_email: {user.email}")
+            # print(f"mail_subject: {mail_subject}\n message: {message}\ntoEmail: {user.email}")
             send_mail(
                 mail_subject,
                 message,
@@ -500,4 +507,4 @@ def UserViewSelf(request):
     items.append(userext.hospital.name)
     items.append(userext.role)
     # print(items)
-    return render(request, 'asp/user_show_self.html', {'item_list':items})
+    return render(request, 'asp/userShowSelf.html', {'item_list':items})

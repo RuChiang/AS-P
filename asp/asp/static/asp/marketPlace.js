@@ -11,6 +11,9 @@ $(document).ready(function() {
 });
 
 $('body').on('keyup click', '.itemQuantity', function() {
+    if (parseInt($(this).val()) < 0) {
+        $(this).val(0);
+    } 
     var sumWeight = 0;
     $('.itemQuantity').each(function() {
         var quantity = parseInt($(this).val(), 10);

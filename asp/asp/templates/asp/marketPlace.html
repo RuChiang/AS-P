@@ -1,4 +1,4 @@
-{% extends "asp/clinic_manager_header.html" %}
+{% extends "asp/headerCM.html" %}
 {% block content %}
 {% load static %}
 <script type="text/javascript" src="{% static "asp/marketPlace.js" %}"></script>
@@ -12,7 +12,7 @@
 
 
 
-<form action="/asp/marketplace" method="get">
+<form action="/asp/marketPlace" method="get">
     <ul>
     {% for category, items in item_list.items %}
         <li>
@@ -22,7 +22,7 @@
                     <div id="{{ item.name }}">
                         <li>
                             <label for="{{ item.name }}"> {{ item.name }}  - </label>
-                            <input class="itemQuantity" type="number" name="{{ item.name }}" value="0">
+                            <input class="itemQuantity" type="number" min="0" name="{{ item.name }}" value="0">
                             <input class="itemWeight" type="hidden" value="{{ item.weight }}">
                             <br>
                             <div>

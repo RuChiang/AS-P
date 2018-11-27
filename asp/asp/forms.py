@@ -15,8 +15,8 @@ class AddUser(forms.Form):
 
 class SignupForm(forms.Form):
 
-    first_name = forms.CharField(label='firstname', max_length = 50)
-    last_name = forms.CharField(label='lastname', max_length = 50)
+    first_name = forms.CharField(label='first name', max_length = 50)
+    last_name = forms.CharField(label='last name', max_length = 50)
     username = forms.CharField(label='username', max_length = 50)
     password = forms.CharField(label='password', max_length = 32, widget=forms.PasswordInput)
 
@@ -34,8 +34,8 @@ class GetPassword(forms.Form):
 class ResetPassword(forms.Form):
     password = forms.CharField(label='password', max_length = 32, widget=forms.PasswordInput)
 
-class ManageAccout(forms.Form):
-    email_address = forms.EmailField(max_length = 254, required=False)
-    first_name = forms.CharField(label='first_name', max_length = 50, required=False)
-    last_name = forms.CharField(label='last_name', max_length = 50, required=False)
+class ManageAccountForm(forms.Form):
+    email = forms.EmailField(max_length = 254, required=False)
+    first_name = forms.CharField(label='first name', max_length = 50, required=False)
+    last_name = forms.CharField(label='last name', max_length = 50, required=False)
     password = forms.CharField(label='password', max_length = 32, widget=forms.PasswordInput, required=False)
