@@ -3,7 +3,8 @@ import csv
 import itertools
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
-from django.conf import settings
+from django.core.files.storage import default_storage
+import os
 
 def redirect_to_homepage(user):
     userext=UserExt.objects.get(user=user)
@@ -34,12 +35,16 @@ def transform_priority_to_integer(priority):
     return req_priority
 
 def generateCSV(content):
-    path_to_file = settings.STATIC_URL + 'asp/itinerary.csv'
-    with open(path_to_file, 'w') as csvFile:
+    folderPath = default_storage.path('itinerary')
+    if not default_storage.exists('itinerary'):
+        os.mkdir(folderPath)
+    folderPath += '/'
+    filename = 'itinerary.csv'
+    with open(folderPath + filename, 'w') as csvFile:
         writer = csv.writer(csvFile)
         writer.writerows(content)
     csvFile.close()
-    return path_to_file
+    return folderPath + filename
 
 # get the supplying_hospital of the hospital where the requester work at
 # relationship: supplying_hospital deliver the order to the hospital of the requester

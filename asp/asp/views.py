@@ -137,7 +137,7 @@ def viewWarehouse(request):
                 if len(pickPackNotDone) != 0:
                     return redirect(f"/asp/viewWarehouseProcessing/{pickPackNotDone[0].id}")
             #TODO: order_to_pickpack will break if there is no item
-        return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack, 'first_order': (ordersToPickPack[0].id if len(ordersToPickPack) > 0 else -1) })
+        return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack[1:], 'first_order': (ordersToPickPack[0] if len(ordersToPickPack) > 0 else -1) })
     else:
         return HttpResponse('No Permission', status = 403)
 
@@ -160,7 +160,12 @@ def delivery(request):
         return HttpResponse('No Permission', status = 403)
 
 def downloadItinerary(request):
-    file = open(settings.STATIC_URL + 'asp/itinerary.csv', 'rb')
+    folderPath = default_storage.path('itinerary')
+    if not default_storage.exists('itinerary'):
+        os.mkdir(folderPath)
+    folderPath += '/'
+    filename = 'itinerary.csv'
+    file = open(folderPath + filename, 'rb')
     response = HttpResponse(content=file,content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="itinerary.csv"'
     return response

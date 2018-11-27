@@ -3,6 +3,5 @@ Pipfile
 Pipfile.lock
 asp/asp/__pycache__/
 asp/config/__pycache__/
-asp/asp/media/shippingLabels
-asp/asp/media/itinerary.csv
-*.sqlite3
+asp/asp/media/shippingLabels/
+asp/asp/media/itinerary/

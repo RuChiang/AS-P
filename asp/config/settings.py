@@ -130,4 +130,4 @@ STATICFILES_DIRS = [
     '/asp/static/',
 ]
 
-STATIC_URL = '/asp/static/'
+STATIC_URL = '/static/'
