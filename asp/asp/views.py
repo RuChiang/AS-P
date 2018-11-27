@@ -72,6 +72,10 @@ def manageAccount(request):
         form = ManageAccountForm()
         if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
             return render(request, 'asp/manageAccountCM.html', {'form': form})
+        elif UserExt.objects.get(user = request.user).is_permitted_to_access('WP'): 
+            return render(request, 'asp/manageAccountWP.html', {'form': form})
+        elif UserExt.objects.get(user = request.user).is_permitted_to_access('DP'):
+            return render(request, 'asp/manageAccountDP.html', {'form': form})
         else:
             return render(request, 'asp/manageAccount.html', {'form': form})
     else:
