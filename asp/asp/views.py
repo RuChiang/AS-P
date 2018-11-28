@@ -72,7 +72,7 @@ def manage_account(request):
         form = ManageAccountForm()
         if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
             return render(request, 'asp/manage_account_CM.html', {'form': form})
-        elif UserExt.objects.get(user = request.user).is_permitted_to_access('WP'): 
+        elif UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
             return render(request, 'asp/manage_account_WP.html', {'form': form})
         elif UserExt.objects.get(user = request.user).is_permitted_to_access('DP'):
             return render(request, 'asp/manage_account_DP.html', {'form': form})
@@ -137,7 +137,7 @@ def viewWarehouse(request):
                 if len(pickPackNotDone) != 0:
                     return redirect(f"/asp/viewWarehouseProcessing/{pickPackNotDone[0].id}")
             #TODO: order_to_pickpack will break if there is no item
-        return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack[1:], 'first_order': (ordersToPickPack[0] if len(ordersToPickPack) > 0 else -1) })
+        return render(request, 'asp/warehouse.html', {'orders': ordersToPickPack, 'first_order': (ordersToPickPack[0] if len(ordersToPickPack) > 0 else -1) })
     else:
         return HttpResponse('No Permission', status = 403)
 

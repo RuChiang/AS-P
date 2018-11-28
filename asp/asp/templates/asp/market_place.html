@@ -31,7 +31,9 @@
                                 {% endif %}
                             </div>
                             <br>
+                            {% if item.description %}
                             <span>Description - {{item.description}}</span>
+                            {% endif %}
                             <br>
                             <span>Shipping Wieght - {{item.weight}}</span>
                         </li>

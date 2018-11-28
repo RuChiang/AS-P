@@ -4,26 +4,6 @@
 <h2>Pack and get ready for processing when ready!</h2>
 
 <ul>
-
-{% if first_order != -1 %}
-    <li>
-        <h4>Order Number: {{first_order.id}}</h4>
-        <p>Order placed at: {{first_order.time_queued_processing}}</p>
-        <p>Priority: {{first_order.getPriorityString}}</p>
-        <p>Weight: {{ first_order.getTotalWeightRounded }}</p>
-    </li>
-{% endif %}
-
-{% if first_order != -1 %}
-
-<form action="/asp/viewWarehouseProcessing/{{ first_order.id }}" method="get">
-   <input type="submit" value="Begin picking and packing">
-</form>
-
-{% endif %}
-
-<br>
-
 {% for order in orders %}
     <li>
         <h4>Order Number: {{order.id}}</h4>
@@ -34,5 +14,10 @@
 {% endfor %}
 </ul>
 
-<br>
+{% if orders|length > 0 %}
+ <form action="/asp/viewWarehouseProcessing/{{ first_order.id }}" method="get">
+   <input type="submit" value="Begin picking and packing">
+</form>
+ {% endif %}
+ <br>
 {% endblock %}
