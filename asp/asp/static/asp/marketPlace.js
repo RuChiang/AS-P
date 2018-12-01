@@ -23,9 +23,11 @@ $('body').on('keyup click', '.itemQuantity', function() {
     });
     if (sumWeight > 23.8) {
         $('#placeOrder').prop('disabled', true);
+        $('#overweight').text('Weight limit exceeded!!!');
     }
     else {
         $('#placeOrder').prop('disabled', false);
+        $('#overweight').text('');
     }
     var roundedWeight = Number(Math.round(sumWeight + 'e2') + 'e-2');
     $('#sumWeight').html(roundedWeight);

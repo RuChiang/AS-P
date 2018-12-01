@@ -3,10 +3,17 @@
 <h1>Order Viewing and Tracking</h1>
 <h4>Here you can see your orders that have not yet been delivered</h4>
 <ul>
-    {% for order in orders %}
+    {% for order, items in orders.items %}
         <li>
             <p>
                 {{ order }}
+                <ul>
+                    {% for item in items %}
+                    <li>
+                        {{ item }}
+                    </li>
+                    {% endfor %}
+                </ul>
                 {% if order.status == "QFP" %}
                     <form action="/asp/cancelOrder" method="post">
                         {% csrf_token %}

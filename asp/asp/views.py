@@ -45,8 +45,14 @@ def view_and_track_order(request):
     if not request.user.is_authenticated:
         return HttpResponse('No Permission', status = 403)
     if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
+        orders_with_items = {}
         ordersNotYetDelivered = Order.objects.filter(Q(status = 'QFP') | Q(status = 'PBW') | Q(status = 'QFD') | Q(status = 'DSD')).filter(requester = UserExt.objects.get(user = request.user).id)
-        return render(request, 'asp/view_and_track_order.html', {'orders': ordersNotYetDelivered})
+        for order in ordersNotYetDelivered:
+            orders_with_items[order] = []
+            for item in Ordered_Item.objects.filter(order = order):
+                orders_with_items[order].append(item)
+
+        return render(request, 'asp/view_and_track_order.html', {'orders': orders_with_items})
     else:
         return HttpResponse('No Permission', status = 403)
 
@@ -69,7 +75,8 @@ def manage_account(request):
         route = utils.redirect_to_homepage(request.user)
         return redirect(route)
     elif request.method == 'GET':
-        form = ManageAccountForm()
+        user = request.user
+        form = ManageAccountForm(initial={'first_name':user.first_name, 'last_name':user.last_name, 'email':user.email})
         if UserExt.objects.get(user = request.user).is_permitted_to_access('CM'):
             return render(request, 'asp/manage_account_CM.html', {'form': form})
         elif UserExt.objects.get(user = request.user).is_permitted_to_access('WP'):
@@ -90,7 +97,7 @@ def downloadShippingLabel(request):
         os.mkdir(folderPath)
     folderPath += '/'
     filename = 'shipping_label_' + str(order.id) + '.pdf'
-    print(folderPath + filename)
+    # print(folderPath + filename)
     utils.generateShippingLabel(folderPath + filename, order,shippingData)
     file = open(folderPath + filename, 'rb')
     response = HttpResponse(file,content_type='application/pdf')
